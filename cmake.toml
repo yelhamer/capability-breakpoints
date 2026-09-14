@@ -1,0 +1,11 @@
+[cmake]
+version = "3.15"
+
+[project]
+name = "UniversalDebuggerProject"
+languages = ["C", "CXX"]
+
+subdirs = [
+    "engine",
+    "debuggers/x64dbg"
+]
