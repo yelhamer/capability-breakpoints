@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <optional>
 #include <memory>
+#include <unordered_map>
 #include "debugger.h"
 
 
@@ -24,7 +25,7 @@ class Node {
 public:
     virtual Node* parent() = 0;
     virtual Node* operator[](int index) = 0;
-    virtual bool evaluate(DebuggerInterface* debugger) = 0;
+    virtual bool evaluate(int tid, DebuggerInterface* debugger) = 0;
     virtual ~Node() = default;
 };
 
@@ -39,11 +40,12 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     // Root nodes have one child only
     std::shared_ptr<Node> child;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 
@@ -61,11 +63,12 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
     std::shared_ptr<Node> child;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 
@@ -86,12 +89,13 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 
@@ -111,12 +115,13 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 
@@ -137,12 +142,13 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> second;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 
@@ -175,12 +181,13 @@ public:
         return nullptr;
     }
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
     int argNumber;
     std::vector<std::byte> value;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 
@@ -208,7 +215,7 @@ public:
         return nullptr;
     }
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
@@ -217,10 +224,11 @@ private:
     const size_t patternSize; // pattern size
     const std::optional<uint64_t> offset;
     const MemorySearchMode searchMode;
-    bool evaluatePrefix_(DebuggerInterface*);
-    bool evaluateSuffix_(DebuggerInterface*);
-    bool evaluateOffset_(DebuggerInterface*);
-    bool evaluateContains_(DebuggerInterface*);
+    std::unordered_map<int, bool> matchesByTID;
+    bool evaluatePrefix_(int tid, DebuggerInterface*);
+    bool evaluateSuffix_(int tid, DebuggerInterface*);
+    bool evaluateOffset_(int tid, DebuggerInterface*);
+    bool evaluateContains_(int tid, DebuggerInterface*);
 };
 
 
@@ -244,12 +252,13 @@ public:
         return nullptr;
     }
 
-    bool evaluate(DebuggerInterface* debugger) override;
+    bool evaluate(int tid, DebuggerInterface* debugger) override;
 
 private:
     Node* parentNode;
     std::string apiName;
     std::vector<std::shared_ptr<Node>> args;
+    std::unordered_map<int, bool> matchesByTID;
 };
 
 }
