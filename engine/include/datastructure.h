@@ -1,3 +1,7 @@
+#ifndef DATASTRUCTURE_H
+#define DATASTRUCTURE_H
+
+#include <any>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -8,6 +12,10 @@
 #include <memory>
 #include <unordered_map>
 #include "debugger.h"
+
+
+
+class Rule; // Forward declaration
 
 
 enum class MemorySearchMode{
@@ -25,24 +33,30 @@ class Node {
 public:
     virtual Node* parent() = 0;
     virtual Node* operator[](int index) = 0;
-    virtual bool evaluate(int tid, DebuggerInterface* debugger) = 0;
+    virtual bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) = 0;
+    virtual bool getMatchByTID(int tid);
     virtual ~Node() = default;
 };
 
 
 class RootNode : public Node {
 public:
-    RootNode(std::shared_ptr<Node> child) : child(child) {}
+    RootNode(std::shared_ptr<Node> child, std::shared_ptr<Rule> rule) : child(child), rule(rule) {}
     
+    std::shared_ptr<Rule> getRule() {return rule;}
+
     Node* parent() override {
         return nullptr;
     }
 
     Node* operator[](int index) override;
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
 
 private:
+    std::shared_ptr<Rule> rule;
     // Root nodes have one child only
     std::shared_ptr<Node> child;
     std::unordered_map<int, bool> matchesByTID;
@@ -63,7 +77,9 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
 
 private:
     Node* parentNode;
@@ -89,7 +105,9 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
 
 private:
     Node* parentNode;
@@ -115,7 +133,9 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
 
 private:
     Node* parentNode;
@@ -127,6 +147,11 @@ private:
 
 class ThenNode : public Node {
 public:
+    ThenNode(Node* parent)
+    : parentNode(parent),
+    first(nullptr),
+    second(nullptr) {}
+
     ThenNode(
         Node* parent,
         std::shared_ptr<Node> first,
@@ -142,7 +167,13 @@ public:
 
     Node* operator[](int index) override;
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
+
+    void setFirst(std::shared_ptr<Node> first);
+
+    void setSecond(std::shared_ptr<Node> second);
 
 private:
     Node* parentNode;
@@ -181,7 +212,9 @@ public:
         return nullptr;
     }
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
 
 private:
     Node* parentNode;
@@ -215,7 +248,9 @@ public:
         return nullptr;
     }
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
 
 private:
     Node* parentNode;
@@ -225,10 +260,10 @@ private:
     const std::optional<uint64_t> offset;
     const MemorySearchMode searchMode;
     std::unordered_map<int, bool> matchesByTID;
-    bool evaluatePrefix_(int tid, DebuggerInterface*);
-    bool evaluateSuffix_(int tid, DebuggerInterface*);
-    bool evaluateOffset_(int tid, DebuggerInterface*);
-    bool evaluateContains_(int tid, DebuggerInterface*);
+    bool evaluatePrefix_(int tid, std::shared_ptr<DebuggerInterface>);
+    bool evaluateSuffix_(int tid, std::shared_ptr<DebuggerInterface>);
+    bool evaluateOffset_(int tid, std::shared_ptr<DebuggerInterface>);
+    bool evaluateContains_(int tid, std::shared_ptr<DebuggerInterface>);
 };
 
 
@@ -237,11 +272,13 @@ public:
     ApiCallNode(
         Node* parent,
         std::string apiName,
-        std::vector<std::shared_ptr<Node>> args
+        std::vector<std::shared_ptr<Node>> args,
+        std::shared_ptr<ThenNode> firstThenNode
     ) 
     : parentNode(parent),
       apiName(apiName),
-      args(args) {};
+      args(args),
+      firstThenNode(firstThenNode) {};
 
     Node* parent() override {
         return parentNode;
@@ -252,13 +289,38 @@ public:
         return nullptr;
     }
 
-    bool evaluate(int tid, DebuggerInterface* debugger) override;
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
+
+    bool getMatchByTID(int tid) override;
+
+    std::shared_ptr<ThenNode> getFirstThenNode() {
+        return firstThenNode;
+    }
 
 private:
     Node* parentNode;
     std::string apiName;
     std::vector<std::shared_ptr<Node>> args;
     std::unordered_map<int, bool> matchesByTID;
+    std::shared_ptr<ThenNode> firstThenNode;
 };
 
 }
+
+
+
+class Rule {
+public:
+    Rule(std::string ruleName, std::string ruleText);
+    std::string getName();
+    bool getMatchByThread(int tid);
+    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger);
+
+private:
+    std::string name;
+    std::shared_ptr<Nodes::RootNode> RootNode;
+    std::unordered_map<int, bool> matchesByTID;
+
+};
+
+#endif // DATASTRUCTURE_H

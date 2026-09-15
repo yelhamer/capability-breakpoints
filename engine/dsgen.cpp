@@ -1,6 +1,7 @@
 #include "language/generated/CapabilityDSLLexer.h"
 #include "language/generated/CapabilityDSLParser.h"
 #include "include/datastructure.h"
+#include "include/dsgen.h"
 
 #include <any>
 #include <cstdint>
@@ -13,9 +14,6 @@
 
 using namespace antlr4;
 
-
-std::shared_ptr<Nodes::Node> walk(tree::ParseTree*, Nodes::Node*, std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>>);
-std::shared_ptr<Nodes::Node> walkArgExpr(CapabilityDSLParser::ArgExprContext*, Nodes::Node*, int);
 
 std::any getTerminal(tree::TerminalNode* node){
     if (node->getSymbol()->getType() == CapabilityDSLLexer::HEX_INT) {
@@ -266,7 +264,8 @@ std::vector<std::shared_ptr<Nodes::Node>> walkApiArgs(CapabilityDSLParser::ApiAr
 std::shared_ptr<Nodes::ApiCallNode> walkApiCall(
     CapabilityDSLParser::ApiCallContext* node,
     Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName){
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
+    std::shared_ptr<Nodes::ThenNode> firstThenNode){
     if (auto* type = dynamic_cast<CapabilityDSLParser::ApiWithArgsContext*>(node)) {
         std::string apiName = type->apiName()->getText();
         std::vector<std::shared_ptr<Nodes::Node>> args = walkApiArgs(type->apiArgs(), parent);
@@ -274,7 +273,8 @@ std::shared_ptr<Nodes::ApiCallNode> walkApiCall(
         auto apiNode = std::make_shared<Nodes::ApiCallNode>(
             parent,
             apiName,
-            args
+            args,
+            firstThenNode
         );
 
         callsByApiName[apiName].push_back(apiNode);
@@ -288,55 +288,75 @@ std::shared_ptr<Nodes::ApiCallNode> walkApiCall(
 std::shared_ptr<Nodes::AndNode> walkAnd(
     CapabilityDSLParser::AndNodeContext* node,
     Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName){
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
+    std::shared_ptr<Nodes::ThenNode> firstThenNode){
     return std::make_shared<Nodes::AndNode>(
         parent,
-        walk(node->ruleExpr()[0], parent, callsByApiName),
-        walk(node->ruleExpr()[1], parent, callsByApiName)
+        walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
+        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode)
     );
 }
 
 std::shared_ptr<Nodes::OrNode> walkOr(
     CapabilityDSLParser::OrNodeContext* node,
     Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName){
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
+    std::shared_ptr<Nodes::ThenNode> firstThenNode){
     return std::make_shared<Nodes::OrNode>(
         parent,
-        walk(node->ruleExpr()[0], parent, callsByApiName),
-        walk(node->ruleExpr()[1], parent, callsByApiName)
+        walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
+        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode)
     );
 }
 
 std::shared_ptr<Nodes::ThenNode> walkThen(
     CapabilityDSLParser::ThenNodeContext* node,
     Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName){
-    return std::make_shared<Nodes::ThenNode>(
-        parent,
-        walk(node->ruleExpr()[0], parent, callsByApiName),
-        walk(node->ruleExpr()[1], parent, callsByApiName)
-    );
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
+    std::shared_ptr<Nodes::ThenNode> firstThenNode){
+        auto thenNode = std::make_shared<Nodes::ThenNode>(parent);
+        
+        thenNode->setFirst(
+            walk(
+                node->ruleExpr()[0],
+                parent,
+                callsByApiName,
+                firstThenNode ? firstThenNode : thenNode
+            )
+        );
+
+        thenNode->setSecond(
+            walk(
+                node->ruleExpr()[1],
+                parent,
+                callsByApiName,
+                firstThenNode ? firstThenNode : thenNode
+            )
+        );
+    
+        return thenNode;
 }
 
 std::shared_ptr<Nodes::Node> walk(
     tree::ParseTree *node,
     Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName){
+    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
+    std::shared_ptr<Nodes::ThenNode> firstThenNode){
     if (auto* ApiNode = dynamic_cast<CapabilityDSLParser::ApiCallContext*>(node)) {
         // cannot have embeded argNumber
-        return walkApiCall(ApiNode, parent, callsByApiName);
+        return walkApiCall(ApiNode, parent, callsByApiName, firstThenNode);
     }
 
     if (auto* AndNode = dynamic_cast<CapabilityDSLParser::AndNodeContext*>(node)) {
-        return walkAnd(AndNode, parent, callsByApiName);
+        return walkAnd(AndNode, parent, callsByApiName, firstThenNode);
     }
 
     if (auto* OrNode = dynamic_cast<CapabilityDSLParser::OrNodeContext*>(node)) {
-        return walkOr(OrNode, parent, callsByApiName);
+        return walkOr(OrNode, parent, callsByApiName, firstThenNode);
     }
 
     if (auto* ThenNode = dynamic_cast<CapabilityDSLParser::ThenNodeContext*>(node)) {
-        return walkThen(ThenNode, parent, callsByApiName);
+        return walkThen(ThenNode, parent, callsByApiName, firstThenNode);
     }
 
     throw antlr4::RuntimeException("Unhandled context");

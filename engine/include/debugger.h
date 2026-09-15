@@ -1,8 +1,9 @@
+#ifndef DEBUGGER_INTERFACE_H
+#define DEBUGGER_INTERFACE_H
+
 #include <vector>
 #include <string>
 
-#ifndef DEBUGGER_INTERFACE_H
-#define DEBUGGER_INTERFACE_H
 
 class DebuggerInterface {
 public:
@@ -18,4 +19,4 @@ public:
 private:
 };
 
-#endif //DEBUGGER_INTERFACE_H
+#endif // DEBUGGER_INTERFACE_H
