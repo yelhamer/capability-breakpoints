@@ -1,0 +1,49 @@
+# Reference: https://build-cpp.github.io/cmkr/cmake-toml
+[project]
+name = "capbp_engine"
+languages = ["CXX"]
+# Runs after project()/language setup - resolves (or fetches) the antlr4
+# C++ runtime and defines a single `antlr4_runtime` target either way.
+include-after = ["cmake/find_or_fetch_antlr4.cmake"]
+
+[options]
+# Only needed if you've edited CapabilityDSL.g4 and want to regenerate
+# generated/ - leave empty to build normally against the checked-in sources.
+CAPBP_ANTLR4_JAR = { value = "", help = "Path to antlr4-*-complete.jar (only needed to regenerate the grammar)" }
+
+[find-package.Java]
+required = false
+components = ["Runtime"]
+
+[target.capbp_engine]
+type = "static"
+headers = ["include/*.hpp"]
+sources = [
+    "generated/*.cpp", # ANTLR4-generated lexer/parser/visitor - checked in,
+                        # so an ordinary build never needs Java or the antlr4 tool
+]
+include-directories = ["include", "generated"]
+compile-features = ["cxx_std_17"]
+link-libraries = ["antlr4_runtime"]
+
+[target.capbp_engine.properties]
+CXX_STANDARD = 17
+CXX_STANDARD_REQUIRED = true
+
+# ---------------------------------------------------------------------
+# Optional: regenerate generated/ from CapabilityDSL.g4. Never runs as part
+# of a normal build - only when built explicitly:
+#   cmake -B build -DCAPBP_ANTLR4_JAR=C:/tools/antlr-4.13.2-complete.jar
+#   cmake --build build --target capbp_regenerate_grammar
+# ---------------------------------------------------------------------
+[target.capbp_regenerate_grammar]
+type = "custom"
+condition = "Java_FOUND AND CAPBP_ANTLR4_JAR"
+command = [
+    "${Java_JAVA_EXECUTABLE}", "-jar", "${CAPBP_ANTLR4_JAR}",
+    "-Dlanguage=Cpp", "-visitor",
+    "-o", "${CMAKE_CURRENT_SOURCE_DIR}/generated",
+    "${CMAKE_CURRENT_SOURCE_DIR}/CapabilityDSL.g4",
+]
+working-directory = "${CMAKE_CURRENT_SOURCE_DIR}"
+comment = "Regenerating lexer/parser from CapabilityDSL.g4"
