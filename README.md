@@ -1,7 +1,7 @@
 # capability-breakpoints
 
-**Express malware capabilities as conditional breakpoints — matched live, during
-a real debugging session, instead of reconstructed after the fact from a log.**
+**Express malware capabilities as conditional breakpoints; matched live, during
+a real debugging session, instead of reconstructed after the fact from sandbox output/log.**
 
 > **Status: early / work in progress.** The core engine (grammar, AST, evaluation
 > runtime) is built. The debugger integration (`debuggers/x64dbg`) is not in this
@@ -12,8 +12,8 @@ a real debugging session, instead of reconstructed after the fact from a log.**
 ## The problem
 
 Traditional breakpoints answer one question: *"has execution reached this
-address?"* Detecting a **capability** — a malware behavior like process
-injection or in-memory unpacking — is rarely about one address. It's a
+address?"* Detecting a **capability** (a malware behavior like process
+injection or in-memory unpacking ) is rarely about one address. It's a
 pattern: *this API call, with an argument that looks like this, followed
 eventually by that API call, or that other one.* Today, expressing that
 during a live debugging session means writing one-off scripts by hand, every
@@ -26,7 +26,7 @@ that a debugger evaluates as your target actually runs.
 ## Example
 
 ```
-VirtualAlloc(_, _, 0x4000) and VirtualProtect(["MZ":])
+VirtualAlloc(,, 0x4000) and VirtualProtect(["MZ":])
     then CreateProcessW() or CreateRemoteThread()
 ```
 
@@ -61,7 +61,7 @@ flowchart TD
 4. Matching is **event-driven and per-thread**: a leaf becoming true notifies
    its parent, which applies its own combining rule (all children for `AND`,
    any child for `OR`, in-order stages for `THEN`) and, if that makes *it*
-   newly true, notifies its own parent — all the way to the root.
+   newly true, notifies its own parent all the way to the root.
 
 This engine is deliberately debugger-agnostic — everything above talks to a
 small abstract interface (thread id, register/argument access, memory
@@ -88,15 +88,6 @@ the first concrete backend, targeting x64dbg's plugin SDK.
       enabling/disabling individual conditions live
 - [ ] Rule actions (dump memory, log, continue) for unattended/batch use
 
-## Background
-
-This project extends the "superblock" capability-matching concept from my
-MSc thesis — which extended Mandiant's [capa](https://github.com/mandiant/capa)
-with a rule-matching scope spanning sequences of basic blocks, reducing
-false positives/negatives from compiler-inserted branching — from **static**
-analysis into **live, debugger-driven** detection. It also builds directly on
-capa's dynamic-analysis flavor (CAPE-sandbox trace matching), which I
-contributed during Google Summer of Code 2023 with Mandiant's FLARE team.
 
 ## Building
 
