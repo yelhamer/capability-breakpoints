@@ -46,6 +46,8 @@ public:
     std::shared_ptr<Rule> getRule() {return rule;}
 
     Node* parent() override {
+        // Returns false by default.
+        // Can return true in the future, for rules that reference other rules.
         return nullptr;
     }
 
@@ -305,22 +307,45 @@ private:
     std::shared_ptr<ThenNode> firstThenNode;
 };
 
+using ApiNodePtr = std::shared_ptr<Nodes::ApiCallNode>;
+using ApiNodeList = std::vector<ApiNodePtr>;
+using ApiNodeMap = std::unordered_map<std::string, ApiNodeList>;
+
 }
 
 
 
 class Rule {
 public:
-    Rule(std::string ruleName, std::string ruleText);
-    std::string getName();
-    bool getMatchByThread(int tid);
+    Rule(
+        std::string ruleName,
+        std::string ruleExpression,
+        std::shared_ptr<Nodes::RootNode> rootNode,
+        Nodes::ApiNodeMap apiCallNodesByApiName) :
+    active(true), name(ruleName),
+    ruleExpression(ruleExpression),
+    rootNode(rootNode),
+    apiCallNodesByApiName(apiCallNodesByApiName) {};
+
+    void setActive(bool state) {this->active = state;};
+    bool getActive() const {return this->active;};
+    std::string getName() const {return this->name;};
+    Nodes::ApiNodeMap getApiCallNodesByApiName() const {return apiCallNodesByApiName;};
+    bool getMatchByThread(int tid) const;
     bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger);
+    Nodes::RootNode generateFromExpresssion(std::string expression);
 
 private:
+    bool active;
     std::string name;
-    std::shared_ptr<Nodes::RootNode> RootNode;
+    std::string ruleExpression;
+    std::shared_ptr<Nodes::RootNode> rootNode;
+    Nodes::ApiNodeMap apiCallNodesByApiName;
     std::unordered_map<int, bool> matchesByTID;
+};
 
+class Rules {
+    
 };
 
 #endif // DATASTRUCTURE_H

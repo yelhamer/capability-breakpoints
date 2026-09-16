@@ -7,6 +7,7 @@
 #include <memory>
 #include "include/datastructure.h"
 #include "include/debugger.h"
+#include "include/dsgen.h"
 
 namespace Nodes {
 
@@ -272,6 +273,11 @@ return std::search(val.begin(), val.end(),
 }
 
 
+bool MemoryNode::getMatchByTID(int tid) {
+    return matchesByTID[tid];
+}
+
+
 bool ApiCallNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     bool result = true;
 
@@ -289,8 +295,18 @@ bool ApiCallNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger)
     return result;
 }
 
-bool MemoryNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
 }
 
+bool Rule::getMatchByThread(int tid) const {
+    return this->getMatchByThread(tid);
+}
+
+bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
+    if (!this->rootNode->evaluate(tid, debugger)) {
+        return false;
+    }
+
+    this->matchesByTID[tid] = true;
+
+    return true;
 }

@@ -11,36 +11,33 @@
 using namespace antlr4;
 
 
-Rule::Rule(std::string ruleName, std::string ruleText) : name(ruleName) {
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName;
+Rule generateRuleFromExpression(std::string ruleName, std::string ruleExpression) {
+    Nodes::ApiNodeMap apiCallNodesByApiName;
 
-    ANTLRInputStream input(ruleText);
+    ANTLRInputStream input(ruleExpression);
     CapabilityDSLLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
     CapabilityDSLParser parser(&tokens);
+    std::shared_ptr<Nodes::RootNode> rootNode = std::dynamic_pointer_cast<Nodes::RootNode>(
+        walk(
+            parser.ruleExpr(),
+            nullptr,
+            apiCallNodesByApiName,
+            nullptr
+        )
+    );
 
-    this->RootNode = std::dynamic_pointer_cast<Nodes::RootNode>(walk(parser.ruleExpr(), nullptr, callsByApiName, nullptr));
-}
-
-bool Rule::getMatchByThread(int tid) {
-    return matchesByTID[tid];
-}
-
-bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-    bool result = RootNode->evaluate(tid, debugger);
-
-    if (result) {
-        matchesByTID[tid] = true;
-    }
-
-    return result;
+    return Rule(
+        ruleName,
+        ruleExpression,
+        rootNode,
+        apiCallNodesByApiName
+    );
 }
 
 
 std::shared_ptr<Rule> attemptMatchFromNode(int tid, std::shared_ptr<DebuggerInterface> debugger, Nodes::Node* node) {
-    bool result = node->evaluate(tid, debugger);
-    
-    if (!result) {
+    if (!node or !node->evaluate(tid, debugger)) {
         return nullptr;
     }
 
@@ -49,7 +46,6 @@ std::shared_ptr<Rule> attemptMatchFromNode(int tid, std::shared_ptr<DebuggerInte
     }
 
     return attemptMatchFromNode(tid, debugger, node->parent());
-
 }
 
 
