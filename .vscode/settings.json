@@ -1,5 +1,6 @@
 {
-    "cmake.configureOnOpen": true,
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false,
 
     "terminal.integrated.profiles.windows": {
         "VS 2022 Developer PowerShell": {

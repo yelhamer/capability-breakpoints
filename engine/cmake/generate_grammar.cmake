@@ -50,10 +50,11 @@ add_custom_target(capbp_regenerate_grammar
         -jar
         "${CAPBP_ANTLR4_JAR}"
         -Dlanguage=Cpp
-        -visitor
+        -no-listener
+        -no-visitor
         -o
         "${CMAKE_CURRENT_SOURCE_DIR}/language/generated"
-        "${CMAKE_CURRENT_SOURCE_DIR}/CapabilityDSL.g4"
+        "${CMAKE_CURRENT_SOURCE_DIR}/language/CapabilityDSL.g4"
 
     WORKING_DIRECTORY
         "${CMAKE_CURRENT_SOURCE_DIR}"

@@ -5,12 +5,66 @@
             "name": "ninja-release-x64dbg",
             "displayName": "Ninja Release - x64dbg",
             "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build-ninja-x64dbg",
+            "binaryDir": "${sourceDir}/build-ninja",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CAPBP_BUILD_X64DBG": "ON"
+                "CAPBP_BUILD_X64DBG": "ON",
+                "CAPBP_BUILD_WINDBG": "OFF",
+                "CAPBP_BUILD_IDA": "OFF",
+                "GENERATE_GRAMMAR": "OFF"
             }
+        },
+        {
+            "name": "ninja-release-windbg",
+            "displayName": "Ninja Release - WinDbg",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CAPBP_BUILD_X64DBG": "OFF",
+                "CAPBP_BUILD_WINDBG": "ON",
+                "CAPBP_BUILD_IDA": "OFF",
+                "GENERATE_GRAMMAR": "OFF"
+            }
+        },
+        {
+            "name": "ninja-release-ida",
+            "displayName": "Ninja Release - IDA",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CAPBP_BUILD_X64DBG": "OFF",
+                "CAPBP_BUILD_WINDBG": "OFF",
+                "CAPBP_BUILD_IDA": "ON",
+                "GENERATE_GRAMMAR": "OFF"
+            }
+        },
+        {
+            "name": "ninja-grammar",
+            "displayName": "Ninja - Regenerate Grammar",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CAPBP_BUILD_X64DBG": "OFF",
+                "CAPBP_BUILD_WINDBG": "OFF",
+                "CAPBP_BUILD_IDA": "OFF",
+                "GENERATE_GRAMMAR": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "grammar",
+            "configurePreset": "ninja-grammar",
+            "targets": [
+                "capbp_regenerate_grammar"
+            ]
         }
     ]
 }

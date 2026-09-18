@@ -28,18 +28,10 @@ target_link_libraries(capbp_engine PUBLIC antlr4_runtime)
 set_target_properties(capbp_engine PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
+    MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
 )
 
-# ---------------------------------------------------------------------
-# Optional: enable ANTLR4 grammar regeneration from CapabilityDSL.g4.
-# Disabled by default. When enabled, configures the ANTLR4 generator and
-# provides the capbp_regenerate_grammar target:
-#
-#   cmake -B build -DGENERATE_GRAMMAR=ON
-#   cmake --build build --target capbp_regenerate_grammar
-#
-# Generated sources are written to language/generated/.
-# ---------------------------------------------------------------------
+# Optional ANTLR4 grammar generation.
 if(GENERATE_GRAMMAR)
-    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/find_or_fetch_antlr4.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_grammar.cmake")
 endif()
