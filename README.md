@@ -91,71 +91,50 @@ the first concrete backend, targeting x64dbg's plugin SDK.
 
 ## Building
 
-The project uses CMake with Ninja and targets C++17.
+This project uses CMake presets with Ninja.
 
-### Requirements
+### Prerequisites
 
-On Windows, install:
-
-- Visual Studio 2022 Build Tools with the MSVC C++ toolchain
+- Visual Studio 2022 with the C++ workload
 - CMake
 - Ninja
-- LLVM (for `clangd`, `clang-format`, and `clang-tidy`)
-- Git
-
-ANTLR4 is fetched and built automatically by CMake; it does not need to be installed separately.
+- Java 25+ for regenerating the ANTLR4 grammar
 
 ### Configure and build
 
-From a **Visual Studio 2022 Developer PowerShell**:
+Configure the desired debugger backend using its CMake preset, then build using the corresponding build preset.
 
-    cmake --preset ninja-x64dbg-release
-    cmake --build --preset ninja-x64dbg-release
+#### x64dbg
 
-The first command configures the project and generates the Ninja build files. The second builds the selected configuration.
-
-The generated compilation database is written to:
-
-    build-ninja-x64dbg-release/compile_commands.json
-
-### Selecting a debugger backend
-
-The debugger backends are controlled by CMake presets.
-
-For example, to build the x64dbg backend:
-
-    cmake --preset ninja-x64dbg-release
-    cmake --build --preset ninja-x64dbg-release
-
-For WinDbg:
-
-    cmake --preset ninja-windbg-release
-    cmake --build --preset ninja-windbg-release
-
-Each backend has its own build directory, so switching between backends does not require reconfiguring an existing build tree.
-
-### Reconfiguring
-
-To regenerate the build files after changing CMake configuration:
-
-    cmake --preset ninja-x64dbg-release
-
-To force a completely fresh configuration:
-
-    Remove-Item -Recurse -Force build-ninja-x64dbg-release
-    cmake --preset ninja-x64dbg-release
-
-`cmake --preset` configures and generates the build system. `cmake --build --preset` actually compiles the project.
-
-### Visual Studio Code
-
-The repository includes VS Code workspace configuration for the CMake/Ninja workflow and a Visual Studio 2022 Developer PowerShell terminal.
-
-The C++ language tooling uses LLVM's `clangd`. Code formatting is provided by `clang-format`, and static analysis is configured through `.clang-tidy`.
-
-Generated files and third-party dependencies should not be edited directly.
+```powershell
+cmake --preset ninja-release-x64dbg
+cmake --build --preset x64dbg
+```
 
 
+All configurations use the same `build-ninja` directory. CMake/Ninja will only rebuild targets whose configuration or sources have changed.
+
+### Regenerate the ANTLR4 grammar
+
+The generated parser/lexer sources are checked into the repository. If `engine/CapabilityDSL.g4` changes, regenerate them with:
+
+```powershell
+cmake --build --preset grammar
+```
+
+This only runs the `capbp_regenerate_grammar` target; it does not build a debugger plugin.
+
+Java 25 or newer is required to run the ANTLR 4.13.2 generator.
+
+### Build output
+
+The CMake build directory is:
+
+```text
+build-ninja/
+```
+
+`compile_commands.json` is generated there when configuring the project and can be used by clangd for C++ language tooling.
 
 ## License
 
