@@ -28,6 +28,8 @@ if(TARGET antlr4_runtime)
     return()
 endif()
 
+# For checking if antlr4 is found on system.
+#[[
 # ---- Tier 1: find_package() --------------------------------------------
 find_package(antlr4-runtime CONFIG QUIET)
 if(TARGET antlr4-runtime)
@@ -61,22 +63,31 @@ if(ANTLR4_RUNTIME_INCLUDE_DIR AND ANTLR4_RUNTIME_LIBRARY)
     return()
 endif()
 
+
 # ---- Tier 3: not found anywhere - fetch and build it ourselves ---------
 message(STATUS "capbp_engine: antlr4 runtime not found locally, fetching from "
                "source (install via vcpkg, or set ANTLR4_RUNTIME_INCLUDE_DIR/"
                "ANTLR4_RUNTIME_LIBRARY yourself, to skip this)")
+]]
+
 include(FetchContent)
 
-set(CAPBP_ANTLR4_TAG "4.13.2" CACHE STRING "ANTLR4 version to fetch if not found locally")
+set(CAPBP_ANTLR4_TAG "4.13.2" CACHE STRING
+    "ANTLR4 version used by capbp_engine" FORCE)
 
 set(ANTLR4_INSTALL OFF CACHE BOOL "" FORCE)
 set(ANTLR_BUILD_CPP_TESTS OFF CACHE BOOL "" FORCE)
 if(WIN32)
-    # Match CMAKE_MSVC_RUNTIME_LIBRARY set globally in the root cmake.toml
-    # (static, to match the x64dbg plugin template) - antlr4's own
-    # CMakeLists.txt may check this option in addition to respecting
-    # CMP0091, so set both to point the same direction.
-    set(WITH_STATIC_CRT ON CACHE BOOL "" FORCE)
+    # Derived from CMAKE_MSVC_RUNTIME_LIBRARY, already resolved by the root
+    # cmake.toml's cmake-before block to match whichever debugger backend(s)
+    # were selected - kept as a single source of truth rather than deciding
+    # this a second time here. antlr4's own CMakeLists.txt may check this
+    # option in addition to respecting CMP0091, so set both consistently.
+    if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "DLL")
+        set(WITH_STATIC_CRT OFF CACHE BOOL "" FORCE)
+    else()
+        set(WITH_STATIC_CRT ON CACHE BOOL "" FORCE)
+    endif()
 endif()
 
 FetchContent_Declare(
@@ -85,8 +96,42 @@ FetchContent_Declare(
     GIT_TAG        ${CAPBP_ANTLR4_TAG}
     GIT_SHALLOW    ON
     SOURCE_SUBDIR  runtime/Cpp
+
+    PATCH_COMMAND
+        ${CMAKE_COMMAND}
+        -DPATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/antlr4-profiling-chrono.patch
+        -DSOURCE_DIR=<SOURCE_DIR>
+        -DSOURCE_FILE=<SOURCE_DIR>/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp
+        -P
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/apply_patch_if_needed.cmake
 )
 FetchContent_MakeAvailable(antlr4_upstream)
+
+# ANTLR 4.13.2's ProfilingATNSimulator.cpp uses std::chrono
+# without including <chrono>. MSVC 14.44+ exposes this.
+if(CAPBP_ANTLR4_VERSION STREQUAL "4.13.2")
+    set(ANTLR4_PROFILING_CPP
+        "${antlr4_upstream_SOURCE_DIR}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp"
+    )
+
+    if(EXISTS "${ANTLR4_PROFILING_CPP}")
+        file(READ "${ANTLR4_PROFILING_CPP}" _antlr4_profiling_cpp)
+
+        if(NOT _antlr4_profiling_cpp MATCHES "#include[ \t]+<chrono>")
+            string(REPLACE
+                "#include \"atn/ProfilingATNSimulator.h\""
+                "#include \"atn/ProfilingATNSimulator.h\"\n#include <chrono>"
+                _antlr4_profiling_cpp
+                "${_antlr4_profiling_cpp}"
+            )
+
+            file(WRITE
+                "${ANTLR4_PROFILING_CPP}"
+                "${_antlr4_profiling_cpp}"
+            )
+        endif()
+    endif()
+endif()
 
 if(TARGET antlr4_static)
     add_library(antlr4_runtime ALIAS antlr4_static)
