@@ -1,5 +1,5 @@
 
-// Generated from CapabilityDSL.g4 by ANTLR 4.10
+// Generated from C:/Users/yacin/src/capability-breakpoints/engine/language/CapabilityDSL.g4 by ANTLR 4.13.2
 
 
 #include "CapabilityDSLLexer.h"
@@ -41,11 +41,20 @@ struct CapabilityDSLLexerStaticData final {
   std::unique_ptr<antlr4::atn::ATN> atn;
 };
 
-std::once_flag capabilitydsllexerLexerOnceFlag;
-CapabilityDSLLexerStaticData *capabilitydsllexerLexerStaticData = nullptr;
+::antlr4::internal::OnceFlag capabilitydsllexerLexerOnceFlag;
+#if ANTLR4_USE_THREAD_LOCAL_CACHE
+static thread_local
+#endif
+std::unique_ptr<CapabilityDSLLexerStaticData> capabilitydsllexerLexerStaticData = nullptr;
 
 void capabilitydsllexerLexerInitialize() {
+#if ANTLR4_USE_THREAD_LOCAL_CACHE
+  if (capabilitydsllexerLexerStaticData != nullptr) {
+    return;
+  }
+#else
   assert(capabilitydsllexerLexerStaticData == nullptr);
+#endif
   auto staticData = std::make_unique<CapabilityDSLLexerStaticData>(
     std::vector<std::string>{
       "T__0", "T__1", "T__2", "T__3", "T__4", "T__5", "T__6", "T__7", "AND", 
@@ -120,7 +129,7 @@ void capabilitydsllexerLexerInitialize() {
   for (size_t i = 0; i < count; i++) { 
     staticData->decisionToDFA.emplace_back(staticData->atn->getDecisionState(i), i);
   }
-  capabilitydsllexerLexerStaticData = staticData.release();
+  capabilitydsllexerLexerStaticData = std::move(staticData);
 }
 
 }
@@ -166,5 +175,9 @@ const atn::ATN& CapabilityDSLLexer::getATN() const {
 
 
 void CapabilityDSLLexer::initialize() {
-  std::call_once(capabilitydsllexerLexerOnceFlag, capabilitydsllexerLexerInitialize);
+#if ANTLR4_USE_THREAD_LOCAL_CACHE
+  capabilitydsllexerLexerInitialize();
+#else
+  ::antlr4::internal::call_once(capabilitydsllexerLexerOnceFlag, capabilitydsllexerLexerInitialize);
+#endif
 }

@@ -1,8 +1,7 @@
 
-// Generated from CapabilityDSL.g4 by ANTLR 4.10
+// Generated from C:/Users/yacin/src/capability-breakpoints/engine/language/CapabilityDSL.g4 by ANTLR 4.13.2
 
 
-#include "CapabilityDSLVisitor.h"
 
 #include "CapabilityDSLParser.h"
 
@@ -36,11 +35,20 @@ struct CapabilityDSLParserStaticData final {
   std::unique_ptr<antlr4::atn::ATN> atn;
 };
 
-std::once_flag capabilitydslParserOnceFlag;
-CapabilityDSLParserStaticData *capabilitydslParserStaticData = nullptr;
+::antlr4::internal::OnceFlag capabilitydslParserOnceFlag;
+#if ANTLR4_USE_THREAD_LOCAL_CACHE
+static thread_local
+#endif
+std::unique_ptr<CapabilityDSLParserStaticData> capabilitydslParserStaticData = nullptr;
 
 void capabilitydslParserInitialize() {
+#if ANTLR4_USE_THREAD_LOCAL_CACHE
+  if (capabilitydslParserStaticData != nullptr) {
+    return;
+  }
+#else
   assert(capabilitydslParserStaticData == nullptr);
+#endif
   auto staticData = std::make_unique<CapabilityDSLParserStaticData>(
     std::vector<std::string>{
       "ruleExpr", "apiCall", "apiName", "apiArgs", "apiArg", "argExpr", 
@@ -136,7 +144,7 @@ void capabilitydslParserInitialize() {
   for (size_t i = 0; i < count; i++) { 
     staticData->decisionToDFA.emplace_back(staticData->atn->getDecisionState(i), i);
   }
-  capabilitydslParserStaticData = staticData.release();
+  capabilitydslParserStaticData = std::move(staticData);
 }
 
 }
@@ -197,12 +205,6 @@ CapabilityDSLParser::RuleExprContext* CapabilityDSLParser::ParentNodeContext::ru
 CapabilityDSLParser::ParentNodeContext::ParentNodeContext(RuleExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ParentNodeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitParentNode(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ThenNodeContext ------------------------------------------------------------------
 
 std::vector<CapabilityDSLParser::RuleExprContext *> CapabilityDSLParser::ThenNodeContext::ruleExpr() {
@@ -220,12 +222,6 @@ tree::TerminalNode* CapabilityDSLParser::ThenNodeContext::THEN() {
 CapabilityDSLParser::ThenNodeContext::ThenNodeContext(RuleExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ThenNodeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitThenNode(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- AndNodeContext ------------------------------------------------------------------
 
 std::vector<CapabilityDSLParser::RuleExprContext *> CapabilityDSLParser::AndNodeContext::ruleExpr() {
@@ -243,12 +239,6 @@ tree::TerminalNode* CapabilityDSLParser::AndNodeContext::AND() {
 CapabilityDSLParser::AndNodeContext::AndNodeContext(RuleExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::AndNodeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitAndNode(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- CallNodeContext ------------------------------------------------------------------
 
 CapabilityDSLParser::ApiCallContext* CapabilityDSLParser::CallNodeContext::apiCall() {
@@ -258,12 +248,6 @@ CapabilityDSLParser::ApiCallContext* CapabilityDSLParser::CallNodeContext::apiCa
 CapabilityDSLParser::CallNodeContext::CallNodeContext(RuleExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::CallNodeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitCallNode(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- OrNodeContext ------------------------------------------------------------------
 
 std::vector<CapabilityDSLParser::RuleExprContext *> CapabilityDSLParser::OrNodeContext::ruleExpr() {
@@ -281,12 +265,6 @@ tree::TerminalNode* CapabilityDSLParser::OrNodeContext::OR() {
 CapabilityDSLParser::OrNodeContext::OrNodeContext(RuleExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::OrNodeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitOrNode(this);
-  else
-    return visitor->visitChildren(this);
-}
 
 CapabilityDSLParser::RuleExprContext* CapabilityDSLParser::ruleExpr() {
    return ruleExpr(0);
@@ -441,12 +419,6 @@ CapabilityDSLParser::ApiArgsContext* CapabilityDSLParser::ApiWithArgsContext::ap
 CapabilityDSLParser::ApiWithArgsContext::ApiWithArgsContext(ApiCallContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ApiWithArgsContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitApiWithArgs(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::ApiCallContext* CapabilityDSLParser::apiCall() {
   ApiCallContext *_localctx = _tracker.createInstance<ApiCallContext>(_ctx, getState());
   enterRule(_localctx, 2, CapabilityDSLParser::RuleApiCall);
@@ -504,12 +476,6 @@ tree::TerminalNode* CapabilityDSLParser::IdentifierNameContext::IDENTIFIER() {
 CapabilityDSLParser::IdentifierNameContext::IdentifierNameContext(ApiNameContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::IdentifierNameContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitIdentifierName(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::ApiNameContext* CapabilityDSLParser::apiName() {
   ApiNameContext *_localctx = _tracker.createInstance<ApiNameContext>(_ctx, getState());
   enterRule(_localctx, 4, CapabilityDSLParser::RuleApiName);
@@ -565,12 +531,6 @@ CapabilityDSLParser::ApiArgContext* CapabilityDSLParser::ArgListContainerContext
 CapabilityDSLParser::ArgListContainerContext::ArgListContainerContext(ApiArgsContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ArgListContainerContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitArgListContainer(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::ApiArgsContext* CapabilityDSLParser::apiArgs() {
   ApiArgsContext *_localctx = _tracker.createInstance<ApiArgsContext>(_ctx, getState());
   enterRule(_localctx, 6, CapabilityDSLParser::RuleApiArgs);
@@ -627,13 +587,6 @@ size_t CapabilityDSLParser::ApiArgContext::getRuleIndex() const {
 }
 
 
-std::any CapabilityDSLParser::ApiArgContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitApiArg(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 CapabilityDSLParser::ApiArgContext* CapabilityDSLParser::apiArg() {
   ApiArgContext *_localctx = _tracker.createInstance<ApiArgContext>(_ctx, getState());
   enterRule(_localctx, 8, CapabilityDSLParser::RuleApiArg);
@@ -653,12 +606,7 @@ CapabilityDSLParser::ApiArgContext* CapabilityDSLParser::apiArg() {
 
     _la = _input->LA(1);
     if ((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & ((1ULL << CapabilityDSLParser::T__0)
-      | (1ULL << CapabilityDSLParser::T__3)
-      | (1ULL << CapabilityDSLParser::NOT)
-      | (1ULL << CapabilityDSLParser::HEX_INT)
-      | (1ULL << CapabilityDSLParser::INT)
-      | (1ULL << CapabilityDSLParser::STRING))) != 0)) {
+      ((1ULL << _la) & 184338) != 0)) {
       setState(67);
       argExpr(0);
     }
@@ -705,12 +653,6 @@ tree::TerminalNode* CapabilityDSLParser::ArgOrContext::OR() {
 CapabilityDSLParser::ArgOrContext::ArgOrContext(ArgExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ArgOrContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitArgOr(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- PrimaryValueContext ------------------------------------------------------------------
 
 CapabilityDSLParser::PrimaryValContext* CapabilityDSLParser::PrimaryValueContext::primaryVal() {
@@ -720,12 +662,6 @@ CapabilityDSLParser::PrimaryValContext* CapabilityDSLParser::PrimaryValueContext
 CapabilityDSLParser::PrimaryValueContext::PrimaryValueContext(ArgExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrimaryValueContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrimaryValue(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- MemMatchContext ------------------------------------------------------------------
 
 CapabilityDSLParser::MemExprContext* CapabilityDSLParser::MemMatchContext::memExpr() {
@@ -735,12 +671,6 @@ CapabilityDSLParser::MemExprContext* CapabilityDSLParser::MemMatchContext::memEx
 CapabilityDSLParser::MemMatchContext::MemMatchContext(ArgExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemMatchContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemMatch(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ArgNotContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::ArgNotContext::NOT() {
@@ -754,12 +684,6 @@ CapabilityDSLParser::ArgExprContext* CapabilityDSLParser::ArgNotContext::argExpr
 CapabilityDSLParser::ArgNotContext::ArgNotContext(ArgExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ArgNotContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitArgNot(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ArgParenContext ------------------------------------------------------------------
 
 CapabilityDSLParser::ArgExprContext* CapabilityDSLParser::ArgParenContext::argExpr() {
@@ -769,12 +693,6 @@ CapabilityDSLParser::ArgExprContext* CapabilityDSLParser::ArgParenContext::argEx
 CapabilityDSLParser::ArgParenContext::ArgParenContext(ArgExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ArgParenContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitArgParen(this);
-  else
-    return visitor->visitChildren(this);
-}
 
 CapabilityDSLParser::ArgExprContext* CapabilityDSLParser::argExpr() {
    return argExpr(0);
@@ -907,12 +825,6 @@ CapabilityDSLParser::MemExprContext* CapabilityDSLParser::MemParenContext::memEx
 CapabilityDSLParser::MemParenContext::MemParenContext(MemExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemParenContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemParen(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- MemAndContext ------------------------------------------------------------------
 
 std::vector<CapabilityDSLParser::MemExprContext *> CapabilityDSLParser::MemAndContext::memExpr() {
@@ -930,12 +842,6 @@ tree::TerminalNode* CapabilityDSLParser::MemAndContext::AND() {
 CapabilityDSLParser::MemAndContext::MemAndContext(MemExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemAndContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemAnd(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- MemOrContext ------------------------------------------------------------------
 
 std::vector<CapabilityDSLParser::MemExprContext *> CapabilityDSLParser::MemOrContext::memExpr() {
@@ -953,12 +859,6 @@ tree::TerminalNode* CapabilityDSLParser::MemOrContext::OR() {
 CapabilityDSLParser::MemOrContext::MemOrContext(MemExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemOrContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemOr(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- MemNotContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::MemNotContext::NOT() {
@@ -972,12 +872,6 @@ CapabilityDSLParser::MemExprContext* CapabilityDSLParser::MemNotContext::memExpr
 CapabilityDSLParser::MemNotContext::MemNotContext(MemExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemNotContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemNot(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- MemLeafContext ------------------------------------------------------------------
 
 CapabilityDSLParser::MemDereferenceContext* CapabilityDSLParser::MemLeafContext::memDereference() {
@@ -987,12 +881,6 @@ CapabilityDSLParser::MemDereferenceContext* CapabilityDSLParser::MemLeafContext:
 CapabilityDSLParser::MemLeafContext::MemLeafContext(MemExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemLeafContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemLeaf(this);
-  else
-    return visitor->visitChildren(this);
-}
 
 CapabilityDSLParser::MemExprContext* CapabilityDSLParser::memExpr() {
    return memExpr(0);
@@ -1140,12 +1028,6 @@ CapabilityDSLParser::PatternExprContext* CapabilityDSLParser::MemDerefContext::p
 CapabilityDSLParser::MemDerefContext::MemDerefContext(MemDereferenceContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MemDerefContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMemDeref(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::MemDereferenceContext* CapabilityDSLParser::memDereference() {
   MemDereferenceContext *_localctx = _tracker.createInstance<MemDereferenceContext>(_ctx, getState());
   enterRule(_localctx, 14, CapabilityDSLParser::RuleMemDereference);
@@ -1205,12 +1087,6 @@ CapabilityDSLParser::PrimaryContext* CapabilityDSLParser::OffsetPatternContext::
 CapabilityDSLParser::OffsetPatternContext::OffsetPatternContext(PatternExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::OffsetPatternContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitOffsetPattern(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- SuffixPatternContext ------------------------------------------------------------------
 
 CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::SuffixPatternContext::patternElems() {
@@ -1220,12 +1096,6 @@ CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::SuffixPatternCont
 CapabilityDSLParser::SuffixPatternContext::SuffixPatternContext(PatternExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::SuffixPatternContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitSuffixPattern(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- PrefixPatternContext ------------------------------------------------------------------
 
 CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::PrefixPatternContext::patternElems() {
@@ -1235,12 +1105,6 @@ CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::PrefixPatternCont
 CapabilityDSLParser::PrefixPatternContext::PrefixPatternContext(PatternExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrefixPatternContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrefixPattern(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ContainsPatternContext ------------------------------------------------------------------
 
 CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::ContainsPatternContext::patternElems() {
@@ -1250,12 +1114,6 @@ CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::ContainsPatternCo
 CapabilityDSLParser::ContainsPatternContext::ContainsPatternContext(PatternExprContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ContainsPatternContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitContainsPattern(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::PatternExprContext* CapabilityDSLParser::patternExpr() {
   PatternExprContext *_localctx = _tracker.createInstance<PatternExprContext>(_ctx, getState());
   enterRule(_localctx, 16, CapabilityDSLParser::RulePatternExpr);
@@ -1357,12 +1215,6 @@ CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::MultiElemsContext
 CapabilityDSLParser::MultiElemsContext::MultiElemsContext(PatternElemsContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MultiElemsContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMultiElems(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- SingleElemContext ------------------------------------------------------------------
 
 CapabilityDSLParser::PatternElemContext* CapabilityDSLParser::SingleElemContext::patternElem() {
@@ -1372,12 +1224,6 @@ CapabilityDSLParser::PatternElemContext* CapabilityDSLParser::SingleElemContext:
 CapabilityDSLParser::SingleElemContext::SingleElemContext(PatternElemsContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::SingleElemContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitSingleElem(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::PatternElemsContext* CapabilityDSLParser::patternElems() {
   PatternElemsContext *_localctx = _tracker.createInstance<PatternElemsContext>(_ctx, getState());
   enterRule(_localctx, 18, CapabilityDSLParser::RulePatternElems);
@@ -1468,12 +1314,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemIntRepeatContext::INT() {
 CapabilityDSLParser::ElemIntRepeatContext::ElemIntRepeatContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemIntRepeatContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemIntRepeat(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemWildcardRepeatContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::ElemWildcardRepeatContext::INT() {
@@ -1491,12 +1331,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemWildcardRepeatContext::WILDCARD(siz
 CapabilityDSLParser::ElemWildcardRepeatContext::ElemWildcardRepeatContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemWildcardRepeatContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemWildcardRepeat(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemWildcardContext ------------------------------------------------------------------
 
 std::vector<tree::TerminalNode *> CapabilityDSLParser::ElemWildcardContext::WILDCARD() {
@@ -1510,12 +1344,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemWildcardContext::WILDCARD(size_t i)
 CapabilityDSLParser::ElemWildcardContext::ElemWildcardContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemWildcardContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemWildcard(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemStringContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::ElemStringContext::STRING() {
@@ -1525,12 +1353,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemStringContext::STRING() {
 CapabilityDSLParser::ElemStringContext::ElemStringContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemStringContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemString(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemHexRepeatContext ------------------------------------------------------------------
 
 CapabilityDSLParser::HexListContext* CapabilityDSLParser::ElemHexRepeatContext::hexList() {
@@ -1544,12 +1366,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemHexRepeatContext::INT() {
 CapabilityDSLParser::ElemHexRepeatContext::ElemHexRepeatContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemHexRepeatContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemHexRepeat(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemStringRepeatContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::ElemStringRepeatContext::STRING() {
@@ -1563,12 +1379,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemStringRepeatContext::INT() {
 CapabilityDSLParser::ElemStringRepeatContext::ElemStringRepeatContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemStringRepeatContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemStringRepeat(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemHexContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::ElemHexContext::HEX_INT() {
@@ -1578,12 +1388,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemHexContext::HEX_INT() {
 CapabilityDSLParser::ElemHexContext::ElemHexContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemHexContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemHex(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ElemIntContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::ElemIntContext::INT() {
@@ -1593,12 +1397,6 @@ tree::TerminalNode* CapabilityDSLParser::ElemIntContext::INT() {
 CapabilityDSLParser::ElemIntContext::ElemIntContext(PatternElemContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::ElemIntContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitElemInt(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::PatternElemContext* CapabilityDSLParser::patternElem() {
   PatternElemContext *_localctx = _tracker.createInstance<PatternElemContext>(_ctx, getState());
   enterRule(_localctx, 20, CapabilityDSLParser::RulePatternElem);
@@ -1753,12 +1551,6 @@ CapabilityDSLParser::HexListContext* CapabilityDSLParser::MultiHexContext::hexLi
 CapabilityDSLParser::MultiHexContext::MultiHexContext(HexListContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MultiHexContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMultiHex(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- SingleHexContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::SingleHexContext::HEX_INT() {
@@ -1768,12 +1560,6 @@ tree::TerminalNode* CapabilityDSLParser::SingleHexContext::HEX_INT() {
 CapabilityDSLParser::SingleHexContext::SingleHexContext(HexListContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::SingleHexContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitSingleHex(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::HexListContext* CapabilityDSLParser::hexList() {
   HexListContext *_localctx = _tracker.createInstance<HexListContext>(_ctx, getState());
   enterRule(_localctx, 22, CapabilityDSLParser::RuleHexList);
@@ -1864,12 +1650,6 @@ CapabilityDSLParser::IntListContext* CapabilityDSLParser::MultiIntContext::intLi
 CapabilityDSLParser::MultiIntContext::MultiIntContext(IntListContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::MultiIntContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitMultiInt(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- SingleIntContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::SingleIntContext::INT() {
@@ -1879,12 +1659,6 @@ tree::TerminalNode* CapabilityDSLParser::SingleIntContext::INT() {
 CapabilityDSLParser::SingleIntContext::SingleIntContext(IntListContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::SingleIntContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitSingleInt(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::IntListContext* CapabilityDSLParser::intList() {
   IntListContext *_localctx = _tracker.createInstance<IntListContext>(_ctx, getState());
   enterRule(_localctx, 24, CapabilityDSLParser::RuleIntList);
@@ -1971,12 +1745,6 @@ tree::TerminalNode* CapabilityDSLParser::PrimaryIntContext::INT() {
 CapabilityDSLParser::PrimaryIntContext::PrimaryIntContext(PrimaryContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrimaryIntContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrimaryInt(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- PrimaryHexContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::PrimaryHexContext::HEX_INT() {
@@ -1986,12 +1754,6 @@ tree::TerminalNode* CapabilityDSLParser::PrimaryHexContext::HEX_INT() {
 CapabilityDSLParser::PrimaryHexContext::PrimaryHexContext(PrimaryContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrimaryHexContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrimaryHex(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::PrimaryContext* CapabilityDSLParser::primary() {
   PrimaryContext *_localctx = _tracker.createInstance<PrimaryContext>(_ctx, getState());
   enterRule(_localctx, 26, CapabilityDSLParser::RulePrimary);
@@ -2061,12 +1823,6 @@ tree::TerminalNode* CapabilityDSLParser::PrimaryValIntContext::INT() {
 CapabilityDSLParser::PrimaryValIntContext::PrimaryValIntContext(PrimaryValContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrimaryValIntContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrimaryValInt(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- PrimaryValStrContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::PrimaryValStrContext::STRING() {
@@ -2076,12 +1832,6 @@ tree::TerminalNode* CapabilityDSLParser::PrimaryValStrContext::STRING() {
 CapabilityDSLParser::PrimaryValStrContext::PrimaryValStrContext(PrimaryValContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrimaryValStrContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrimaryValStr(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- PrimaryValHexContext ------------------------------------------------------------------
 
 tree::TerminalNode* CapabilityDSLParser::PrimaryValHexContext::HEX_INT() {
@@ -2091,12 +1841,6 @@ tree::TerminalNode* CapabilityDSLParser::PrimaryValHexContext::HEX_INT() {
 CapabilityDSLParser::PrimaryValHexContext::PrimaryValHexContext(PrimaryValContext *ctx) { copyFrom(ctx); }
 
 
-std::any CapabilityDSLParser::PrimaryValHexContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CapabilityDSLVisitor*>(visitor))
-    return parserVisitor->visitPrimaryValHex(this);
-  else
-    return visitor->visitChildren(this);
-}
 CapabilityDSLParser::PrimaryValContext* CapabilityDSLParser::primaryVal() {
   PrimaryValContext *_localctx = _tracker.createInstance<PrimaryValContext>(_ctx, getState());
   enterRule(_localctx, 28, CapabilityDSLParser::RulePrimaryVal);
@@ -2196,5 +1940,9 @@ bool CapabilityDSLParser::memExprSempred(MemExprContext *_localctx, size_t predi
 }
 
 void CapabilityDSLParser::initialize() {
-  std::call_once(capabilitydslParserOnceFlag, capabilitydslParserInitialize);
+#if ANTLR4_USE_THREAD_LOCAL_CACHE
+  capabilitydslParserInitialize();
+#else
+  ::antlr4::internal::call_once(capabilitydslParserOnceFlag, capabilitydslParserInitialize);
+#endif
 }
