@@ -11,7 +11,10 @@
 using namespace antlr4;
 
 
-Rule generateRuleFromExpression(std::string ruleName, std::string ruleExpression) {
+Rule generateRuleFromExpression(
+    std::string ruleName,
+    std::string ruleExpression
+) {
     Nodes::ApiNodeMap apiCallNodesByApiName;
 
     ANTLRInputStream input(ruleExpression);
@@ -36,7 +39,11 @@ Rule generateRuleFromExpression(std::string ruleName, std::string ruleExpression
 }
 
 
-std::shared_ptr<Rule> attemptMatchFromNode(int tid, std::shared_ptr<DebuggerInterface> debugger, Nodes::Node* node) {
+std::shared_ptr<Rule> attemptMatchFromNode(
+    int tid,
+    std::shared_ptr<DebuggerInterface> debugger,
+    Nodes::Node* node
+) {
     if (!node or !node->evaluate(tid, debugger)) {
         return nullptr;
     }
@@ -49,7 +56,11 @@ std::shared_ptr<Rule> attemptMatchFromNode(int tid, std::shared_ptr<DebuggerInte
 }
 
 
-std::shared_ptr<Rule> attemptMatchFromApiNode(int tid, std::shared_ptr<DebuggerInterface> debugger, std::shared_ptr<Nodes::ApiCallNode> apiNode) {
+std::shared_ptr<Rule> attemptMatchFromApiNode(
+    int tid,
+    std::shared_ptr<DebuggerInterface> debugger,
+    std::shared_ptr<Nodes::ApiCallNode> apiNode
+) {
     bool result = apiNode->evaluate(tid, debugger);
     std::shared_ptr<Nodes::Node> node = apiNode;
     

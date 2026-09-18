@@ -8,7 +8,7 @@
 class DebuggerInterface {
 public:
     virtual void log(const std::string& message) = 0;
-    virtual uint getThreadId() const = 0;
+    virtual int getThreadId() const = 0;
     virtual std::string getApiName() const = 0;
     virtual std::vector<std::byte> getArgValue(const int argNumber) const = 0;
     virtual std::vector<std::byte> getArgMemAllContents(const int argNumber) const = 0;

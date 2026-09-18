@@ -1,13 +1,10 @@
 #ifndef DATASTRUCTURE_H
 #define DATASTRUCTURE_H
 
-#include <any>
 #include <cstddef>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <algorithm>
 #include <optional>
 #include <memory>
 #include <unordered_map>
