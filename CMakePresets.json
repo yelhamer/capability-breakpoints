@@ -1,0 +1,16 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "ninja-release-x64dbg",
+            "displayName": "Ninja Release - x64dbg",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-ninja-x64dbg",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CAPBP_BUILD_X64DBG": "ON"
+            }
+        }
+    ]
+}

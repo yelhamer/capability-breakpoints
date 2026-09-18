@@ -1,0 +1,23 @@
+{
+    "cmake.configureOnOpen": true,
+
+    "terminal.integrated.profiles.windows": {
+        "VS 2022 Developer PowerShell": {
+            "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "args": [
+                "-NoExit",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\.vscode\\vsdev.ps1"
+            ]
+        }
+    },
+
+    "terminal.integrated.defaultProfile.windows": "VS 2022 Developer PowerShell",
+
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+    }
+}
