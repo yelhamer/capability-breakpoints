@@ -24,6 +24,18 @@ sources = [
     "src/*.cpp",
     "src/*.h",
 ]
+cmake-after = '''
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe")
+    add_custom_command(TARGET PluginTemplate PRE_LINK
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" unload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting unload before link"
+    )
+    add_custom_command(TARGET PluginTemplate POST_BUILD
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" reload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting reload after build"
+    )
+endif()
+'''
 
 # was "../../engine/generated" - stale, engine now generates into
 # language/generated/ (see engine's own cmake.toml), not generated/ directly

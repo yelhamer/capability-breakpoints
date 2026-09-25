@@ -53,10 +53,14 @@ include("cmake/x64dbg.cmake")
 # Target: PluginTemplate
 set(PluginTemplate_SOURCES
 	cmake.toml
+	"src/hook.cpp"
+	"src/hook.h"
 	"src/plugin.cpp"
 	"src/plugin.h"
 	"src/pluginmain.cpp"
 	"src/pluginmain.h"
+	"src/x64dbg-debugger.cpp"
+	"src/x64dbg-debugger.h"
 )
 
 x64dbg_plugin(PluginTemplate)
@@ -72,3 +76,15 @@ target_include_directories(PluginTemplate PUBLIC
 target_link_libraries(PluginTemplate PUBLIC
 	capbp_engine
 )
+
+set(CMKR_TARGET PluginTemplate)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe")
+    add_custom_command(TARGET PluginTemplate PRE_LINK
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" unload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting unload before link"
+    )
+    add_custom_command(TARGET PluginTemplate POST_BUILD
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" reload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting reload after build"
+    )
+endif()

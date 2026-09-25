@@ -1,25 +1,24 @@
-#include "language/generated/CapabilityDSLLexer.h"
-#include "language/generated/CapabilityDSLParser.h"
-#include "include/datastructure.h"
 #include "include/dsgen.h"
 
-#include <any>
-#include <cstdint>
-#include <string>
-#include <optional>
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include "include/datastructure.h"
+#include "language/generated/CapabilityDSLLexer.h"
+#include "language/generated/CapabilityDSLParser.h"
 
+#include <any>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 using namespace antlr4;
 
-
-std::any getTerminal(tree::TerminalNode* node){
+std::any getTerminal(tree::TerminalNode* node) {
     if (node->getSymbol()->getType() == CapabilityDSLLexer::HEX_INT) {
-        return std::stol(node->getSymbol()->getText(), nullptr, 16);
+        return std::stoll(node->getSymbol()->getText(), nullptr, 16);
     } else if (node->getSymbol()->getType() == CapabilityDSLLexer::INT) {
-        return std::stol(node->getSymbol()->getText());
+        return std::stoll(node->getSymbol()->getText());
     } else if (node->getSymbol()->getType() == CapabilityDSLLexer::STRING) {
         return node->getSymbol()->getText();
     } else if (node->getSymbol()->getType() == CapabilityDSLLexer::WILDCARD) {
@@ -27,45 +26,37 @@ std::any getTerminal(tree::TerminalNode* node){
     } else if (node->getSymbol()->getType() == CapabilityDSLLexer::IDENTIFIER) {
         return node->getSymbol()->getText();
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context terminal");
     }
 }
 
-long walkPrimary(CapabilityDSLParser::PrimaryContext* node){
+long long walkPrimary(CapabilityDSLParser::PrimaryContext* node) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::PrimaryHexContext*>(node)) {
-        return std::any_cast<long>(getTerminal(type->HEX_INT()));
+        return std::any_cast<long long>(getTerminal(type->HEX_INT()));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::PrimaryIntContext*>(node)) {
-        return std::any_cast<long>(getTerminal(type->INT()));
+        return std::any_cast<long long>(getTerminal(type->INT()));
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context primary");
     }
 }
 
-std::shared_ptr<Nodes::PrimaryNode> walkPrimaryVal(CapabilityDSLParser::PrimaryValContext* node, Nodes::Node* parent, int argNumber){
+std::shared_ptr<Nodes::PrimaryNode> walkPrimaryVal(CapabilityDSLParser::PrimaryValContext* node,
+                                                   Nodes::Node* parent, int argNumber) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::PrimaryValHexContext*>(node)) {
-        return std::make_shared<Nodes::PrimaryNode> (
-            parent,
-            argNumber,
-            std::any_cast<long>(getTerminal(type->HEX_INT()))
-        );
+        return std::make_shared<Nodes::PrimaryNode>(
+            parent, argNumber, std::any_cast<long long>(getTerminal(type->HEX_INT())));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::PrimaryValIntContext*>(node)) {
-        return std::make_shared<Nodes::PrimaryNode> (
-            parent,
-            argNumber,
-            std::any_cast<long>(getTerminal(type->INT()))
-        );
+        return std::make_shared<Nodes::PrimaryNode>(
+            parent, argNumber, std::any_cast<long long>(getTerminal(type->INT())));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::PrimaryValStrContext*>(node)) {
-        return std::make_shared<Nodes::PrimaryNode> (
-            parent,
-            argNumber,
-            std::any_cast<std::string>(getTerminal(type->STRING()))
-        );
+        return std::make_shared<Nodes::PrimaryNode>(
+            parent, argNumber, std::any_cast<std::string>(getTerminal(type->STRING())));
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context primaryval");
     }
 }
 
-std::vector<short> walkIntList(CapabilityDSLParser::IntListContext* node){
+std::vector<short> walkIntList(CapabilityDSLParser::IntListContext* node) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::SingleIntContext*>(node)) {
         return std::vector<short>{std::any_cast<short>(getTerminal(type->INT()))};
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::MultiIntContext*>(node)) {
@@ -74,11 +65,11 @@ std::vector<short> walkIntList(CapabilityDSLParser::IntListContext* node){
         intList1.insert(intList1.end(), intList2.begin(), intList2.end());
         return intList1;
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context intlist");
     }
 }
 
-std::vector<short> walkHexList(CapabilityDSLParser::HexListContext* node){
+std::vector<short> walkHexList(CapabilityDSLParser::HexListContext* node) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::SingleHexContext*>(node)) {
         return std::vector<short>{std::any_cast<short>(getTerminal(type->HEX_INT()))};
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::MultiHexContext*>(node)) {
@@ -87,11 +78,11 @@ std::vector<short> walkHexList(CapabilityDSLParser::HexListContext* node){
         hexList1.insert(hexList1.end(), hexList2.begin(), hexList2.end());
         return hexList1;
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context hexlist");
     }
 }
 
-std::vector<short> walkPatternElem(CapabilityDSLParser::PatternElemContext* node){
+std::vector<short> walkPatternElem(CapabilityDSLParser::PatternElemContext* node) {
     std::vector<short> pattern;
     if (auto* type = dynamic_cast<CapabilityDSLParser::ElemStringRepeatContext*>(node)) {
         std::string strSubPattern = std::any_cast<std::string>(getTerminal(type->STRING()));
@@ -109,7 +100,8 @@ std::vector<short> walkPatternElem(CapabilityDSLParser::PatternElemContext* node
             pattern.insert(pattern.end(), intSubPattern.begin(), intSubPattern.end());
         }
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::ElemWildcardRepeatContext*>(node)) {
-        for (int i = 0; i < type->WILDCARD().size() * std::any_cast<int>(getTerminal(type->INT())); ++i) {
+        for (int i = 0; i < type->WILDCARD().size() * std::any_cast<int>(getTerminal(type->INT()));
+             ++i) {
             pattern.push_back(-1);
         }
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::ElemWildcardContext*>(node)) {
@@ -128,7 +120,7 @@ std::vector<short> walkPatternElem(CapabilityDSLParser::PatternElemContext* node
     return pattern;
 }
 
-std::vector<short> walkPatternElems(CapabilityDSLParser::PatternElemsContext* node){
+std::vector<short> walkPatternElems(CapabilityDSLParser::PatternElemsContext* node) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::SingleElemContext*>(node)) {
         return walkPatternElem(type->patternElem());
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::MultiElemsContext*>(node)) {
@@ -137,228 +129,179 @@ std::vector<short> walkPatternElems(CapabilityDSLParser::PatternElemsContext* no
         patternElems1.insert(patternElems1.end(), patternElems2.begin(), patternElems2.end());
         return patternElems1;
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context patternelems");
     }
 }
 
-std::shared_ptr<Nodes::MemoryNode> walkPatternExpr(CapabilityDSLParser::PatternExprContext* node, Nodes::Node* parent, int argNumber){
+std::shared_ptr<Nodes::MemoryNode> walkPatternExpr(CapabilityDSLParser::PatternExprContext* node,
+                                                   Nodes::Node* parent, int argNumber) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::OffsetPatternContext*>(node)) {
         std::vector<short> pattern = walkPatternElems(type->patternElems());
         uint64_t offset = static_cast<uint64_t>(walkPrimary(type->primary()));
-        return std::make_shared<Nodes::MemoryNode>(
-            nullptr,
-            argNumber,
-            pattern,
-            offset,
-            MemorySearchMode::Offset       
-        );
+        return std::make_shared<Nodes::MemoryNode>(nullptr, argNumber, pattern, offset,
+                                                   MemorySearchMode::Offset);
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::PrefixPatternContext*>(node)) {
         std::vector<short> pattern = walkPatternElems(type->patternElems());
-        return std::make_shared<Nodes::MemoryNode>(
-            nullptr,
-            argNumber,
-            pattern,
-            std::nullopt,
-            MemorySearchMode::Prefix
-        );
+        return std::make_shared<Nodes::MemoryNode>(nullptr, argNumber, pattern, std::nullopt,
+                                                   MemorySearchMode::Prefix);
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::SuffixPatternContext*>(node)) {
         std::vector<short> pattern = walkPatternElems(type->patternElems());
-        return std::make_shared<Nodes::MemoryNode>(
-            nullptr,
-            argNumber,
-            pattern,
-            std::nullopt,
-            MemorySearchMode::Suffix
-        );
+        return std::make_shared<Nodes::MemoryNode>(nullptr, argNumber, pattern, std::nullopt,
+                                                   MemorySearchMode::Suffix);
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::ContainsPatternContext*>(node)) {
         std::vector<short> pattern = walkPatternElems(type->patternElems());
-        return std::make_shared<Nodes::MemoryNode>(
-            nullptr,
-            argNumber,
-            pattern,
-            std::nullopt,
-            MemorySearchMode::Contains
-        );
+        return std::make_shared<Nodes::MemoryNode>(nullptr, argNumber, pattern, std::nullopt,
+                                                   MemorySearchMode::Contains);
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context pattern expr");
     }
 }
 
-
-std::shared_ptr<Nodes::Node> walkMemExpr(CapabilityDSLParser::MemExprContext* node, Nodes::Node* parent, int argNumber){
+std::shared_ptr<Nodes::Node> walkMemExpr(CapabilityDSLParser::MemExprContext* node,
+                                         Nodes::Node* parent, int argNumber) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::MemParenContext*>(node)) {
         return walkMemExpr(type->memExpr(), parent, argNumber);
-    } else if (auto* type =  dynamic_cast<CapabilityDSLParser::MemNotContext*>(node)) {
-        return std::make_shared<Nodes::NotNode>(
-            parent,
-            walkMemExpr(type->memExpr(), parent, argNumber)
-        );
+    } else if (auto* type = dynamic_cast<CapabilityDSLParser::MemNotContext*>(node)) {
+        return std::make_shared<Nodes::NotNode>(parent,
+                                                walkMemExpr(type->memExpr(), parent, argNumber));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::MemAndContext*>(node)) {
-        return std::make_shared<Nodes::AndNode>(
-            parent,
-            walkMemExpr(type->memExpr()[0], parent, argNumber),
-            walkMemExpr(type->memExpr()[1], parent, argNumber)
-        );
-    } else if (auto* type =  dynamic_cast<CapabilityDSLParser::MemOrContext*>(node)) {
-        return std::make_shared<Nodes::OrNode>(
-            parent,
-            walkMemExpr(type->memExpr()[0], parent, argNumber),
-            walkMemExpr(type->memExpr()[1], parent, argNumber)
-        );
+        return std::make_shared<Nodes::AndNode>(parent,
+                                                walkMemExpr(type->memExpr()[0], parent, argNumber),
+                                                walkMemExpr(type->memExpr()[1], parent, argNumber));
+    } else if (auto* type = dynamic_cast<CapabilityDSLParser::MemOrContext*>(node)) {
+        return std::make_shared<Nodes::OrNode>(parent,
+                                               walkMemExpr(type->memExpr()[0], parent, argNumber),
+                                               walkMemExpr(type->memExpr()[1], parent, argNumber));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::MemLeafContext*>(node)) {
-        auto* type_ = dynamic_cast<CapabilityDSLParser::MemDereferenceContext*>(type->memDereference());
-        if(auto* type__ = dynamic_cast<CapabilityDSLParser::MemDerefContext*>(type_)){
+        auto* type_ =
+            dynamic_cast<CapabilityDSLParser::MemDereferenceContext*>(type->memDereference());
+        if (auto* type__ = dynamic_cast<CapabilityDSLParser::MemDerefContext*>(type_)) {
             return walkPatternExpr(type__->patternExpr(), parent, argNumber);
         } else {
-            throw antlr4::RuntimeException("Unhandled context");
+            throw antlr4::RuntimeException("Unhandled context mem derefcontext");
         }
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context mem expr");
     }
 }
 
-
-std::shared_ptr<Nodes::Node> walkArgExpr(CapabilityDSLParser::ArgExprContext* node, Nodes::Node* parent, int argNumber){
+std::shared_ptr<Nodes::Node> walkArgExpr(CapabilityDSLParser::ArgExprContext* node,
+                                         Nodes::Node* parent, int argNumber) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::ArgParenContext*>(node)) {
         return walkArgExpr(type->argExpr(), parent, argNumber);
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::ArgNotContext*>(node)) {
-        return std::make_shared<Nodes::NotNode>(
-            parent,
-            walkArgExpr(type->argExpr(), parent, argNumber)
-        );
+        return std::make_shared<Nodes::NotNode>(parent,
+                                                walkArgExpr(type->argExpr(), parent, argNumber));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::ArgOrContext*>(node)) {
-        return std::make_shared<Nodes::OrNode>(
-            parent,
-            walkArgExpr(type->argExpr()[0], parent, argNumber),
-            walkArgExpr(type->argExpr()[1], parent, argNumber)
-        );
+        return std::make_shared<Nodes::OrNode>(parent,
+                                               walkArgExpr(type->argExpr()[0], parent, argNumber),
+                                               walkArgExpr(type->argExpr()[1], parent, argNumber));
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::MemMatchContext*>(node)) {
         return walkMemExpr(type->memExpr(), parent, argNumber);
     } else if (auto* type = dynamic_cast<CapabilityDSLParser::PrimaryValueContext*>(node)) {
         return walkPrimaryVal(type->primaryVal(), parent, argNumber);
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context arg expr");
     }
 }
 
-std::shared_ptr<Nodes::Node> walkApiArg(CapabilityDSLParser::ApiArgContext* node, Nodes::Node* parent, int argNumber){
+std::shared_ptr<Nodes::Node> walkApiArg(CapabilityDSLParser::ApiArgContext* node,
+                                        Nodes::Node* parent, int argNumber) {
     if (node->argExpr()) {
         return walkArgExpr(node->argExpr(), parent, argNumber);
-    } else {
-        throw antlr4::RuntimeException("Unhandled context");
     }
+    return nullptr;
 }
 
-std::vector<std::shared_ptr<Nodes::Node>> walkApiArgs(CapabilityDSLParser::ApiArgsContext* node, Nodes::Node* parent){
+std::vector<std::shared_ptr<Nodes::Node>> walkApiArgs(CapabilityDSLParser::ApiArgsContext* node,
+                                                      Nodes::Node* parent) {
     std::vector<std::shared_ptr<Nodes::Node>> args;
 
-    if (auto* type = dynamic_cast<CapabilityDSLParser::ArgListContainerContext*>(node)) {    
-        for(int i; i< type->apiArg().size(); ++i) {
-            args.push_back(walkApiArg(type->apiArg()[i], parent, i));
+    if (auto* type = dynamic_cast<CapabilityDSLParser::ArgListContainerContext*>(node)) {
+        for (int i = 0; i < type->apiArg().size(); ++i) {
+            std::shared_ptr<Nodes::Node> node = walkApiArg(type->apiArg()[i], parent, i);
+            if (node) {
+                args.push_back(node);
+            }
         }
     }
 
     return args;
 }
 
-std::shared_ptr<Nodes::ApiCallNode> walkApiCall(
-    CapabilityDSLParser::ApiCallContext* node,
-    Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
-    std::shared_ptr<Nodes::ThenNode> firstThenNode){
+std::shared_ptr<Nodes::ApiCallNode> walkApiCall(CapabilityDSLParser::ApiCallContext* node,
+                                                Nodes::Node* parent,
+                                                std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
+                                                std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::ApiWithArgsContext*>(node)) {
         std::string apiName = type->apiName()->getText();
         std::vector<std::shared_ptr<Nodes::Node>> args = walkApiArgs(type->apiArgs(), parent);
-        
-        auto apiNode = std::make_shared<Nodes::ApiCallNode>(
-            parent,
-            apiName,
-            args,
-            firstThenNode
-        );
 
-        callsByApiName[apiName].push_back(apiNode);
+        auto apiNode = std::make_shared<Nodes::ApiCallNode>(parent, apiName, args, firstThenNode);
+
+        (*callsByApiName)[apiName].push_back(apiNode);
 
         return apiNode;
     } else {
-        throw antlr4::RuntimeException("Unhandled context");
+        throw antlr4::RuntimeException("Unhandled context ApiCall");
     }
 }
 
-std::shared_ptr<Nodes::AndNode> walkAnd(
-    CapabilityDSLParser::AndNodeContext* node,
-    Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
-    std::shared_ptr<Nodes::ThenNode> firstThenNode){
+std::shared_ptr<Nodes::AndNode> walkAnd(CapabilityDSLParser::AndNodeContext* node,
+                                        Nodes::Node* parent,
+                                        std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
+                                        std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     return std::make_shared<Nodes::AndNode>(
-        parent,
-        walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
-        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode)
-    );
+        parent, walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
+        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode));
 }
 
-std::shared_ptr<Nodes::OrNode> walkOr(
-    CapabilityDSLParser::OrNodeContext* node,
-    Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
-    std::shared_ptr<Nodes::ThenNode> firstThenNode){
+std::shared_ptr<Nodes::OrNode> walkOr(CapabilityDSLParser::OrNodeContext* node, Nodes::Node* parent,
+                                      std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
+                                      std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     return std::make_shared<Nodes::OrNode>(
-        parent,
-        walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
-        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode)
-    );
+        parent, walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
+        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode));
 }
 
-std::shared_ptr<Nodes::ThenNode> walkThen(
-    CapabilityDSLParser::ThenNodeContext* node,
-    Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
-    std::shared_ptr<Nodes::ThenNode> firstThenNode){
-        auto thenNode = std::make_shared<Nodes::ThenNode>(parent);
-        
-        thenNode->setFirst(
-            walk(
-                node->ruleExpr()[0],
-                parent,
-                callsByApiName,
-                firstThenNode ? firstThenNode : thenNode
-            )
-        );
+std::shared_ptr<Nodes::ThenNode> walkThen(CapabilityDSLParser::ThenNodeContext* node,
+                                          Nodes::Node* parent,
+                                          std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
+                                          std::shared_ptr<Nodes::ThenNode> firstThenNode) {
+    auto thenNode = std::make_shared<Nodes::ThenNode>(parent);
 
-        thenNode->setSecond(
-            walk(
-                node->ruleExpr()[1],
-                parent,
-                callsByApiName,
-                firstThenNode ? firstThenNode : thenNode
-            )
-        );
-    
-        return thenNode;
+    thenNode->setFirst(walk(node->ruleExpr()[0], parent, callsByApiName,
+                            firstThenNode ? firstThenNode : thenNode));
+
+    thenNode->setSecond(walk(node->ruleExpr()[1], parent, callsByApiName,
+                             firstThenNode ? firstThenNode : thenNode));
+
+    return thenNode;
 }
 
-std::shared_ptr<Nodes::Node> walk(
-    tree::ParseTree *node,
-    Nodes::Node* parent,
-    std::unordered_map<std::string, std::vector<std::shared_ptr<Nodes::ApiCallNode>>> callsByApiName,
-    std::shared_ptr<Nodes::ThenNode> firstThenNode){
-    if (auto* ApiNode = dynamic_cast<CapabilityDSLParser::ApiCallContext*>(node)) {
+std::shared_ptr<Nodes::Node> walk(tree::ParseTree* node, Nodes::Node* parent,
+                                  std::shared_ptr<Nodes::ApiNodeMap> callNodesByName,
+                                  std::shared_ptr<Nodes::ThenNode> firstThenNode) {
+    if (auto* CallNode = dynamic_cast<CapabilityDSLParser::CallNodeContext*>(node)) {
         // cannot have embeded argNumber
-        return walkApiCall(ApiNode, parent, callsByApiName, firstThenNode);
+
+        return walkApiCall(CallNode->apiCall(), parent, callNodesByName, firstThenNode);
     }
 
     if (auto* AndNode = dynamic_cast<CapabilityDSLParser::AndNodeContext*>(node)) {
-        return walkAnd(AndNode, parent, callsByApiName, firstThenNode);
+
+        return walkAnd(AndNode, parent, callNodesByName, firstThenNode);
     }
 
     if (auto* OrNode = dynamic_cast<CapabilityDSLParser::OrNodeContext*>(node)) {
-        return walkOr(OrNode, parent, callsByApiName, firstThenNode);
+
+        return walkOr(OrNode, parent, callNodesByName, firstThenNode);
     }
 
     if (auto* ThenNode = dynamic_cast<CapabilityDSLParser::ThenNodeContext*>(node)) {
-        return walkThen(ThenNode, parent, callsByApiName, firstThenNode);
+
+        return walkThen(ThenNode, parent, callNodesByName, firstThenNode);
     }
 
-    throw antlr4::RuntimeException("Unhandled context");
-
+    throw antlr4::RuntimeException("Unhandled context main");
 }

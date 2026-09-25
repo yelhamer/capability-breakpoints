@@ -3,7 +3,7 @@
     "cmake.configureOnEdit": false,
 
     "terminal.integrated.profiles.windows": {
-        "VS 2022 Developer PowerShell": {
+        "VS 2026 Developer PowerShell": {
             "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
             "args": [
                 "-NoExit",
@@ -15,7 +15,7 @@
         }
     },
 
-    "terminal.integrated.defaultProfile.windows": "VS 2022 Developer PowerShell",
+    "terminal.integrated.defaultProfile.windows": "VS 2026 Developer PowerShell",
 
     "[cpp]": {
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",

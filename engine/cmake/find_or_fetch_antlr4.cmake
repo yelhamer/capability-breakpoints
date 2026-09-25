@@ -11,9 +11,9 @@ set(CAPBP_ANTLR4_TAG "4.13.2" CACHE STRING
 
 # ANTLR4 runtime uses the dynamic MSVC runtime.
 # This keeps it compatible with capbp_engine (/MD).
-if(WIN32)
-    set(WITH_STATIC_CRT OFF CACHE BOOL "" FORCE)
-endif()
+#if(WIN32)
+#    set(WITH_STATIC_CRT OFF CACHE BOOL "" FORCE)
+#endif()
 
 set(ANTLR4_INSTALL OFF CACHE BOOL "" FORCE)
 set(ANTLR_BUILD_CPP_TESTS OFF CACHE BOOL "" FORCE)

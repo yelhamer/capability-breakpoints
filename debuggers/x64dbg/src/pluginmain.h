@@ -4,11 +4,17 @@
 #ifndef PLUGIN_NAME
 #define PLUGIN_NAME "Conditional Breakpoints"
 #endif // PLUGIN_NAME
+
+#ifndef PLUGIN_COMMAND
+#define PLUGIN_COMMAND "cbdbg"
+#endif // PLUGIN_COMMAND
+
 #define PLUGIN_VERSION 1
 
-#include "pluginsdk/bridgemain.h"
+#include "pluginsdk/DeviceNameResolver/DeviceNameResolver.h"
+#include "pluginsdk/TitanEngine/TitanEngine.h"
+#include "pluginsdk/XEDParse/XEDParse.h"
 #include "pluginsdk/_plugins.h"
-
 #include "pluginsdk/_scriptapi_argument.h"
 #include "pluginsdk/_scriptapi_assembler.h"
 #include "pluginsdk/_scriptapi_bookmark.h"
@@ -25,12 +31,9 @@
 #include "pluginsdk/_scriptapi_register.h"
 #include "pluginsdk/_scriptapi_stack.h"
 #include "pluginsdk/_scriptapi_symbol.h"
-
-#include "pluginsdk/DeviceNameResolver/DeviceNameResolver.h"
+#include "pluginsdk/bridgemain.h"
 #include "pluginsdk/jansson/jansson.h"
 #include "pluginsdk/lz4/lz4file.h"
-#include "pluginsdk/TitanEngine/TitanEngine.h"
-#include "pluginsdk/XEDParse/XEDParse.h"
 
 #define Cmd(x) DbgCmdExecDirect(x)
 #define Eval(x) DbgValFromString(x)

@@ -1,12 +1,15 @@
+#include "include/datastructure.h"
+
+#include "include/debugger.h"
+
+#include <algorithm>
 #include <cstddef>
+#include <limits>
+#include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <optional>
-#include <memory>
-#include "include/datastructure.h"
-#include "include/debugger.h"
 
 namespace Nodes {
 
@@ -19,20 +22,19 @@ Node* RootNode::operator[](int index) {
 
 bool RootNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     // Empty rules are considered to match everything, so if the root has no child, return true.
-    bool result = child ? child->evaluate(tid, debugger) : true;
-    
+    bool result = child ? child->getMatchByTID(tid) : true;
+
     if (result) {
         matchesByTID[tid] = true;
     }
 
     return result;
-
 }
 
-bool RootNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool RootNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
-
 
 Node* NotNode::operator[](int index) {
     if (index == 0) {
@@ -43,9 +45,8 @@ Node* NotNode::operator[](int index) {
 }
 
 bool NotNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-    // short circuit
-    bool result = !child->evaluate(tid, debugger);
-    
+    bool result = !child->getMatchByTID(tid);
+
     if (result) {
         matchesByTID[tid] = true;
     }
@@ -53,8 +54,9 @@ bool NotNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     return result;
 }
 
-bool NotNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool NotNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
 
 Node* AndNode::operator[](int index) {
@@ -67,14 +69,13 @@ Node* AndNode::operator[](int index) {
 }
 
 bool AndNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-    // short circuit
     bool result = true;
 
-    if(!left->evaluate(tid, debugger))
+    if (!left->getMatchByTID(tid))
         result = false;
-    if(!right->evaluate(tid, debugger))
+    if (!right->getMatchByTID(tid))
         result = false;
-    
+
     if (result) {
         matchesByTID[tid] = true;
     }
@@ -82,10 +83,10 @@ bool AndNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     return result;
 }
 
-bool AndNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool AndNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
-
 
 Node* OrNode::operator[](int index) {
     if (index == 0) {
@@ -99,12 +100,11 @@ Node* OrNode::operator[](int index) {
 bool OrNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     bool result = false;
 
-    // short circuit
-    if(left->evaluate(tid, debugger))
+    if (left->getMatchByTID(tid))
         result = true;
-    if(right->evaluate(tid, debugger))
+    if (right->getMatchByTID(tid))
         result = true;
-    
+
     if (result) {
         matchesByTID[tid] = true;
     }
@@ -112,10 +112,10 @@ bool OrNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     return result;
 }
 
-bool OrNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool OrNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
-
 
 Node* ThenNode::operator[](int index) {
     if (index == 0) {
@@ -127,16 +127,15 @@ Node* ThenNode::operator[](int index) {
 }
 
 bool ThenNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-    if (!first or !second){
+    if (!first || !second) {
         throw std::logic_error("Attempt to evaluate Then node before its children are set.");
     }
 
     bool result = false;
 
-    // short circuit
-    if(!first->evaluate(tid, debugger))
+    if (!first->getMatchByTID(tid))
         result = false;
-    result = second->evaluate(tid, debugger);
+    result = second->getMatchByTID(tid);
 
     if (result) {
         matchesByTID[tid] = true;
@@ -145,8 +144,9 @@ bool ThenNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     return result;
 }
 
-bool ThenNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool ThenNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
 
 void ThenNode::setFirst(std::shared_ptr<Node> first) {
@@ -157,36 +157,34 @@ void ThenNode::setSecond(std::shared_ptr<Node> second) {
     this->second = second;
 }
 
-PrimaryNode::PrimaryNode(
-    Node* parent,
-    int argNumber,
-    std::string value)
-    : parentNode(parent),
-    argNumber(argNumber) {
-        std::vector<std::byte> result;
-        result.reserve(value.size());
+PrimaryNode::PrimaryNode(Node* parent, int argNumber, std::string value)
+    : parentNode(parent), argNumber(argNumber) {
+    std::vector<std::byte> result;
+    result.reserve(value.size());
 
-        for (unsigned char c : value) {
-            result.push_back(static_cast<std::byte>(c));
-        }
-
-        this->value = std::move(result);
+    for (unsigned char c : value) {
+        result.push_back(static_cast<std::byte>(c));
     }
 
-PrimaryNode::PrimaryNode(
-    Node* parent,
-    int argNumber,
-    long value)
-    : parentNode(parent),
-    argNumber(argNumber) {
-        const std::byte* byte_ptr = reinterpret_cast<const std::byte*>(&value);
-        
+    this->value = std::move(result);
+}
+
+PrimaryNode::PrimaryNode(Node* parent, int argNumber, long long value)
+    : parentNode(parent), argNumber(argNumber) {
+    std::byte* byte_ptr;
+    if (sizeof(void*) == 4) {
+        long val = static_cast<long>(value);
+        byte_ptr = reinterpret_cast<std::byte*>(&val);
+        // Construct the vector using the pointer range
+        std::vector<std::byte> bytes(byte_ptr, byte_ptr + sizeof(val));
+        this->value = bytes;
+    } else {
+        byte_ptr = reinterpret_cast<std::byte*>(&value);
         // Construct the vector using the pointer range
         std::vector<std::byte> bytes(byte_ptr, byte_ptr + sizeof(value));
-
         this->value = bytes;
     }
-
+}
 
 bool PrimaryNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     // Placeholder for actual evaluation logic
@@ -200,23 +198,27 @@ bool PrimaryNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger)
     return result;
 }
 
-bool PrimaryNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool PrimaryNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
-
 
 bool MemoryNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     bool result;
 
-    switch(searchMode) {
-        case MemorySearchMode::Prefix:
-            result = evaluatePrefix_(tid, debugger);
-        case MemorySearchMode::Suffix:
-            result = evaluateSuffix_(tid, debugger);
-        case MemorySearchMode::Offset:
-            result = evaluateOffset_(tid, debugger);
-        case MemorySearchMode::Contains:
-            result = evaluateContains_(tid, debugger);
+    switch (searchMode) {
+    case MemorySearchMode::Prefix:
+        result = evaluatePrefix_(tid, debugger);
+        break;
+    case MemorySearchMode::Suffix:
+        result = evaluateSuffix_(tid, debugger);
+        break;
+    case MemorySearchMode::Offset:
+        result = evaluateOffset_(tid, debugger);
+        break;
+    case MemorySearchMode::Contains:
+        result = evaluateContains_(tid, debugger);
+        break;
     }
 
     if (result) {
@@ -226,63 +228,58 @@ bool MemoryNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) 
     return result;
 }
 
-
 bool MemoryNode::evaluatePrefix_(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-std::vector<std::byte> val = debugger->getArgMemLeadingContents(argNumber, patternSize);
-return std::equal(val.begin(), val.end(),
-                        pattern.begin(), pattern.end(),
-                        [](std::byte a, short b) {
-                            if(b == -1)
-                                return true;
-                            return a == static_cast<std::byte>(b);
-                        });
+    std::vector<std::byte> val = debugger->getArgMemLeadingContents(argNumber, patternSize);
+    return std::equal(val.begin(), val.end(), pattern.begin(), pattern.end(),
+                      [](std::byte a, short b) {
+                          if (b == -1)
+                              return true;
+                          return a == static_cast<std::byte>(b);
+                      });
 }
 
 bool MemoryNode::evaluateSuffix_(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-std::vector<std::byte> val = debugger->getArgMemTrailingContents(argNumber, patternSize);
-return std::equal(val.begin(), val.end(),
-                        pattern.begin(), pattern.end(),
-                        [](std::byte a, short b) {
-                            if(b == -1)
-                                return true;
-                            return a == static_cast<std::byte>(b);
-                        });
+    std::vector<std::byte> val = debugger->getArgMemTrailingContents(argNumber, patternSize);
+    return std::equal(val.begin(), val.end(), pattern.begin(), pattern.end(),
+                      [](std::byte a, short b) {
+                          if (b == -1)
+                              return true;
+                          return a == static_cast<std::byte>(b);
+                      });
 }
 
 bool MemoryNode::evaluateOffset_(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-std::vector<std::byte> val = debugger->getArgMemContentsAtOffset(argNumber, offset.value(), patternSize);
-return std::equal(val.begin(), val.end(),
-                        pattern.begin(), pattern.end(),
-                        [](std::byte a, short b) {
-                            if(b == -1)
-                                return true;
-                            return a == static_cast<std::byte>(b);
-                        });
+    std::vector<std::byte> val =
+        debugger->getArgMemContentsAtOffset(argNumber, offset.value(), patternSize);
+    return std::equal(val.begin(), val.end(), pattern.begin(), pattern.end(),
+                      [](std::byte a, short b) {
+                          if (b == -1)
+                              return true;
+                          return a == static_cast<std::byte>(b);
+                      });
 }
 
 bool MemoryNode::evaluateContains_(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-std::vector<std::byte> val = debugger->getArgMemAllContents(argNumber);
-return std::search(val.begin(), val.end(),
-                        pattern.begin(), pattern.end(),
-                        [](std::byte a, short b) {
-                            if(b == -1)
-                                return true;
-                            return a == static_cast<std::byte>(b);
-                        }) != val.end();
+    std::vector<std::byte> val = debugger->getArgMemAllContents(argNumber);
+    return std::search(val.begin(), val.end(), pattern.begin(), pattern.end(),
+                       [](std::byte a, short b) {
+                           if (b == -1)
+                               return true;
+                           return a == static_cast<std::byte>(b);
+                       }) != val.end();
 }
 
-
-bool MemoryNode::getMatchByTID(int tid) {
-    return matchesByTID[tid];
+bool MemoryNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
-
 
 bool ApiCallNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     bool result = true;
 
-    for(auto arg : args) {
+    for (auto arg : args) {
         // All arguments must bool evaluate to true for the API call to be considered a match
-        if(!arg->evaluate(tid, debugger)) {
+        if (!arg->evaluate(tid, debugger)) {
             return false;
         }
     }
@@ -294,10 +291,16 @@ bool ApiCallNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger)
     return result;
 }
 
+bool ApiCallNode::getMatchByTID(int tid) const {
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
 
+} // namespace Nodes
+
 bool Rule::getMatchByThread(int tid) const {
-    return this->getMatchByThread(tid);
+    const auto it = matchesByTID.find(tid);
+    return it != matchesByTID.end() && it->second;
 }
 
 bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
