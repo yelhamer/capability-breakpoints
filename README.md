@@ -3,9 +3,7 @@
 **Express malware capabilities as conditional breakpoints; matched live, during
 a real debugging session, instead of reconstructed after the fact from sandbox output/log.**
 
-> **Status: early / work in progress.** The core engine (grammar, AST, evaluation
-> runtime) is built. The debugger integration (`debuggers/x64dbg`) is not in this
-> repository yet — see [Roadmap](#roadmap).
+> **Status: functional prototype.** Core functionalty and capability detection works. Next is GUI features and better hooking mechanisms (api derouting instead of INT3).
 
 ---
 
@@ -53,7 +51,7 @@ flowchart TD
 
 1. A rule is parsed by an **ANTLR4 grammar** into a parse tree.
 2. The parse tree is translated into a small, independently-owned **runtime
-   AST** — `AND`/`OR`/`THEN` combinator nodes over `ApiCall` leaves — decoupled
+   AST** (`AND`/`OR`/`THEN` combinator nodes over `ApiCall` leaves) decoupled
    from ANTLR entirely past this point.
 3. The debugger backend installs one hook per distinct API name referenced
    anywhere across all loaded rules, and dispatches hits by name into an
@@ -63,7 +61,7 @@ flowchart TD
    any child for `OR`, in-order stages for `THEN`) and, if that makes *it*
    newly true, notifies its own parent all the way to the root.
 
-This engine is deliberately debugger-agnostic — everything above talks to a
+This engine is deliberately debugger-agnostic. Everything above talks to a
 small abstract interface (thread id, register/argument access, memory
 reads), not to any specific debugger's API. `debuggers/x64dbg` (planned) is
 the first concrete backend, targeting x64dbg's plugin SDK.
@@ -72,7 +70,7 @@ the first concrete backend, targeting x64dbg's plugin SDK.
 
 ```
 .
-├── engine/              # grammar, AST translation, evaluation runtime — debugger-agnostic
+├── engine/              # grammar, AST translation, evaluation runtime (debugger-agnostic)
 ├── debuggers/x64dbg/    # x64dbg plugin backend (not yet added)
 └── cmake.toml           # cmkr project definition
 ```
@@ -84,7 +82,7 @@ the first concrete backend, targeting x64dbg's plugin SDK.
 - [x] Memory pattern matching: exact / prefix / suffix / contains, wildcard
       bytes, fixed-offset anchoring
 - [x] Runtime: event-driven, per-thread evaluation tree
-- [ ] `debuggers/x64dbg`: plugin backend, API hooking, GUI panel for
+- [x] `debuggers/x64dbg`: plugin backend, API hooking, GUI panel for
       enabling/disabling individual conditions live
 - [ ] Rule actions (dump memory, log, continue) for unattended/batch use
 
