@@ -3,7 +3,7 @@
 **Express malware capabilities as conditional breakpoints; matched live, during
 a real debugging session, instead of reconstructed after the fact from sandbox output/log.**
 
-> **Status: functional prototype.** Core functionalty and capability detection works. Next is GUI features and better hooking mechanisms (api derouting instead of INT3).
+> **Status: functional prototype.** Core functionalty, capability detection, and x64dbg GUI works. Next is better hooking mechanisms (api derouting instead of INT3) and perhaps some gui embelishments.
 
 ---
 
