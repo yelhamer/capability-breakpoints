@@ -9,9 +9,18 @@ include-before = [
 	"cmake/msvc-configurations.cmake",
 ]
 
+cmake-before = '''
+list(PREPEND CMAKE_MODULE_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+)
+'''
+
+[find-package]
+Qt5 = { components = ["Widgets"] }
+
 [fetch-content.x64dbg]
-url = "https://sourceforge.net/projects/x64dbg/files/snapshots/snapshot_2023-06-10_18-05.zip"
-sha1 = "04468bd61fb36d6b10d17f342f03ef12f5b2ce62"
+url = "https://github.com/x64dbg/x64dbg/releases/download/2026.05.27/snapshot_2026-05-27_12-11.zip"
+sha256 = "d41966dfc5b435a372798245300ca0ab7bb8e48bdbf48512c6fb20fcca427697"
 include-after = ["cmake/x64dbg.cmake"]
 
 [template.plugin]
@@ -20,11 +29,24 @@ add-function = "x64dbg_plugin"
 
 [target.PluginTemplate]
 type = "plugin"
+
 sources = [
     "src/*.cpp",
     "src/*.h",
 ]
+
 cmake-after = '''
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe")
+    add_custom_command(TARGET PluginTemplate PRE_LINK
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" unload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting unload before link"
+    )
+    add_custom_command(TARGET PluginTemplate POST_BUILD
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" reload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting reload after build"
+    )
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe")
     add_custom_command(TARGET PluginTemplate PRE_LINK
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" unload "$<TARGET_FILE:PluginTemplate>"
@@ -39,5 +61,12 @@ endif()
 
 # was "../../engine/generated" - stale, engine now generates into
 # language/generated/ (see engine's own cmake.toml), not generated/ directly
-include-directories = ["../../engine/include", "../../engine/language/generated"]
-link-libraries = ["capbp_engine"]
+include-directories = [
+    "../../engine/include",
+    "../../engine/language/generated",
+]
+
+link-libraries = [
+    "capbp_engine",
+    "Qt5::Widgets",
+]

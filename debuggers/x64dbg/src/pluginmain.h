@@ -11,8 +11,6 @@
 
 #define PLUGIN_VERSION 1
 
-#include "pluginsdk/DeviceNameResolver/DeviceNameResolver.h"
-#include "pluginsdk/TitanEngine/TitanEngine.h"
 #include "pluginsdk/XEDParse/XEDParse.h"
 #include "pluginsdk/_plugins.h"
 #include "pluginsdk/_scriptapi_argument.h"

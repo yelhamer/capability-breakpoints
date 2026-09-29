@@ -2,12 +2,15 @@
 
 #include "datastructure.h"
 #include "engine.h"
+#include "gui.h"
 #include "hook.h"
 #include "pluginmain.h"
 #include "pluginsdk/_plugins.h"
 #include "pluginsdk/bridgemain.h"
 #include "x64dbg-debugger.h"
 
+#include <QApplication>
+#include <QMetaObject>
 #include <memory>
 #include <regex>
 #include <string>
@@ -25,6 +28,10 @@
 std::unordered_map<std::string, std::shared_ptr<Hook>> hooksByApiName;
 std::vector<std::shared_ptr<Rule>> rules;
 
+void removeRule(size_t index) {
+    return;
+}
+
 // Helper function to safely read the dynamic C++ type name in MSVC
 std::string get_exception_type_name() {
     auto current_ex = std::current_exception();
@@ -41,7 +48,27 @@ std::string get_exception_type_name() {
         return "Custom/Raw Non-std::exception Object";
     }
 }
-static bool cbExampleCommand(int argc, char** argv) {
+
+std::shared_ptr<Rule> addRule(std::string ruleName, std::string ruleExpression) {
+    std::shared_ptr<Rule> rule = generateRuleFromExpression(ruleName, ruleExpression);
+    rules.push_back(rule);
+
+    for (const auto& [name, nodes] : *(rule->getApiCallNodesByApiName())) {
+        auto it = hooksByApiName.find(name);
+        if (it != hooksByApiName.end()) {
+            // Existing hook for apiname found
+            it->second->addCallNodes(nodes);
+        } else {
+            auto newHook = std::make_shared<Hook>(name);
+            newHook->addCallNodes(nodes);
+            hooksByApiName.emplace(name, newHook);
+        }
+    }
+
+    return rule;
+}
+
+static bool cbCommand(int argc, char** argv) {
     //_plugin_logprintf("\n\n\n\ncb callback reached");
     //_plugin_logprintf(" %s\n\n\n\n\n", argv[0]);
     std::cmatch matches;
@@ -56,21 +83,7 @@ static bool cbExampleCommand(int argc, char** argv) {
     std::string ruleExpression = matches[3];
 
     try {
-        std::shared_ptr<Rule> rule = generateRuleFromExpression(ruleName, ruleExpression);
-        rules.push_back(rule);
-
-        for (const auto& [name, nodes] : *(rule->getApiCallNodesByApiName())) {
-            auto it = hooksByApiName.find(name);
-            if (it != hooksByApiName.end()) {
-                // Existing hook for apiname found
-                it->second->addCallNodes(nodes);
-            } else {
-                auto newHook = std::make_shared<Hook>(name);
-                newHook->addCallNodes(nodes);
-                hooksByApiName.emplace(name, newHook);
-            }
-        }
-
+        std::shared_ptr<Rule> rule = addRule(ruleName, ruleExpression);
         _plugin_logprintf("Added rule %s\n", rule->getName().c_str());
 
     } catch (const std::exception& exception) {
@@ -91,7 +104,7 @@ bool pluginInit(PLUG_INITSTRUCT* initStruct) {
     _plugin_logprintf("cb callback registered");
 
     // Prefix of the functions to call here: _plugin_register
-    _plugin_registercommand(pluginHandle, PLUGIN_COMMAND, cbExampleCommand, true);
+    _plugin_registercommand(pluginHandle, PLUGIN_COMMAND, cbCommand, true);
     _plugin_logprintf("cb command registered");
 
     // Return false to cancel loading the plugin.
@@ -103,14 +116,15 @@ bool pluginInit(PLUG_INITSTRUCT* initStruct) {
 // This function is not executed on the GUI thread, so you might need
 // to use WaitForSingleObject or similar to wait for everything to close.
 void pluginStop() {
-    // Prefix of the functions to call here: _plugin_unregister
     dprintf("pluginStop(pluginHandle: %d)\n", pluginHandle);
 
-    // Unregister callback
     _plugin_unregistercallback(pluginHandle, CB_BREAKPOINT);
-
-    // Unregister command
     _plugin_unregistercommand(pluginHandle, PLUGIN_COMMAND);
+
+    if (qApp) {
+        QMetaObject::invokeMethod(
+            qApp, []() { DestroyCapabilityView(); }, Qt::BlockingQueuedConnection);
+    }
 }
 
 // Do GUI/Menu related things here.
@@ -120,4 +134,5 @@ void pluginSetup() {
     // Prefix of the functions to call here: _plugin_menu
 
     dprintf("pluginSetup(pluginHandle: %d)\n", pluginHandle);
+    CreateCapabilityView();
 }

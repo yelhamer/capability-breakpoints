@@ -27,10 +27,20 @@ endif()
 include("cmake/msvc-static-runtime.cmake")
 include("cmake/msvc-configurations.cmake")
 
+list(PREPEND CMAKE_MODULE_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+)
+
 project(PluginTemplate
 	LANGUAGES
 		C
 		CXX
+)
+
+# Packages
+find_package(Qt5 REQUIRED
+	COMPONENTS
+		Widgets
 )
 
 include(FetchContent)
@@ -42,9 +52,9 @@ endif()
 message(STATUS "Fetching x64dbg...")
 FetchContent_Declare(x64dbg
 	URL
-		"https://sourceforge.net/projects/x64dbg/files/snapshots/snapshot_2023-06-10_18-05.zip"
+		"https://github.com/x64dbg/x64dbg/releases/download/2026.05.27/snapshot_2026-05-27_12-11.zip"
 	URL_HASH
-		SHA1=04468bd61fb36d6b10d17f342f03ef12f5b2ce62
+		SHA256=d41966dfc5b435a372798245300ca0ab7bb8e48bdbf48512c6fb20fcca427697
 )
 FetchContent_MakeAvailable(x64dbg)
 
@@ -53,6 +63,8 @@ include("cmake/x64dbg.cmake")
 # Target: PluginTemplate
 set(PluginTemplate_SOURCES
 	cmake.toml
+	"src/gui.cpp"
+	"src/gui.h"
 	"src/hook.cpp"
 	"src/hook.h"
 	"src/plugin.cpp"
@@ -75,9 +87,21 @@ target_include_directories(PluginTemplate PUBLIC
 
 target_link_libraries(PluginTemplate PUBLIC
 	capbp_engine
+	Qt5::Widgets
 )
 
 set(CMKR_TARGET PluginTemplate)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe")
+    add_custom_command(TARGET PluginTemplate PRE_LINK
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" unload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting unload before link"
+    )
+    add_custom_command(TARGET PluginTemplate POST_BUILD
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" reload "$<TARGET_FILE:PluginTemplate>"
+        COMMENT "PluginDevHelper: requesting reload after build"
+    )
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe")
     add_custom_command(TARGET PluginTemplate PRE_LINK
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/PluginDevBuildTool.exe" unload "$<TARGET_FILE:PluginTemplate>"
