@@ -3,9 +3,11 @@
 
 #include "debugger.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -294,28 +296,19 @@ class Rule {
         : active(true), name(ruleName), ruleExpression(ruleExpression), rootNode(rootNode),
           apiCallNodesByApiName(apiCallNodesByApiName) {};
 
-    void setActive(bool state) {
-        this->active = state;
-    }
-    bool getActive() const {
-        return this->active;
-    }
-    std::string getName() const {
-        return this->name;
-    }
-    std::string getExpression() const {
-        return this->ruleExpression;
-    }
-    std::shared_ptr<Nodes::RootNode> getRootNode() {
-        return rootNode;
-    }
-    std::shared_ptr<Nodes::ApiNodeMap> getApiCallNodesByApiName() const {
-        return apiCallNodesByApiName;
-    }
+    void setActive(bool state);
+    bool getActive() const;
+    void setName(const std::string& newName);
+    std::string getName() const;
+    std::vector<int> getMatchingThreads() const;
+    std::string getExpression() const;
+    std::shared_ptr<Nodes::RootNode> getRootNode();
+    std::shared_ptr<Nodes::ApiNodeMap> getApiCallNodesByApiName() const;
     bool getMatchByThread(int tid) const;
     bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger);
 
   private:
+    mutable std::mutex stateMutex;
     bool active;
     std::string name;
     std::string ruleExpression;
@@ -323,7 +316,5 @@ class Rule {
     std::shared_ptr<Nodes::ApiNodeMap> apiCallNodesByApiName;
     std::unordered_map<int, bool> matchesByTID;
 };
-
-class Rules {};
 
 #endif // DATASTRUCTURE_H
