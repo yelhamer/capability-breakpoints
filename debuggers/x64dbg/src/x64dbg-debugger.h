@@ -4,7 +4,9 @@
 // clang-format: off
 #include <cstddef>
 #include <cstdio>
+#include <optional>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <windows.h>
 
@@ -16,6 +18,12 @@
 #include <cstddef>
 #include <vector>
 
+#define BPNAME "\"hook-installed bp\""
+#define BPTAG (std::string(" (") + BPNAME + ")")
+#define BPTAGSZ (BPTAG).size()
+
+using breakpoint = std::tuple<duint, std::string>;
+
 class x64dbgDebugger : public DebuggerInterface {
   public:
     void log(const std::string& message) override;
@@ -24,7 +32,17 @@ class x64dbgDebugger : public DebuggerInterface {
 
     duint getApiAddr(std::string apiName);
 
-    void setBreakpoint(duint address);
+    bool checkForBreakpoint(duint address);
+
+    std::optional<breakpoint> getBreakpointsAddrName(duint address);
+    std::vector<breakpoint> getBreakpointsAddrName();
+    bool resumeExecution();
+    bool setBreakpoint(duint address);
+    bool removeBreakpoint(duint address);
+    std::string formatAddress(duint address);
+
+    bool installTag(duint address);
+    bool removeTag(duint address);
 
     std::vector<std::byte> getArgValue(const int argNumber) const override;
 

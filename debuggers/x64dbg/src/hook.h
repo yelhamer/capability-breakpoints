@@ -20,8 +20,14 @@ class Hook {
   public:
     Hook(std::string apiName);
 
-    void attemptMatch();
+    bool attemptMatch();
     void addCallNodes(const Nodes::ApiNodeList& nodes);
+    void removeCallNodes(const Nodes::ApiNodeList& nodes);
+    bool isEmpty() {
+        return callNodes->empty();
+    }
+    void removeBreakpoint();
+    ~Hook();
 
     static std::shared_ptr<Nodes::ApiNodeList> getCallNodes();
 
@@ -29,6 +35,7 @@ class Hook {
 
   private:
     const std::string apiName;
+    bool ownsBreakpoint;
     std::shared_ptr<Nodes::ApiNodeList> callNodes;
 
   protected:

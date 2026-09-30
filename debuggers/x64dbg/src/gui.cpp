@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
@@ -75,6 +76,56 @@ class StatusDotDelegate final : public QStyledItemDelegate {
         }
 
         painter->restore();
+    }
+};
+
+class CapabilityTable final : public QTableWidget {
+  public:
+    explicit CapabilityTable(QWidget* parent = nullptr) : QTableWidget(parent) {}
+
+    std::function<void()> onInsert;
+    std::function<void()> onDelete;
+    std::function<void()> onEnter;
+    std::function<void(int)> onMove;
+
+  protected:
+    void keyPressEvent(QKeyEvent* event) override {
+        switch (event->key()) {
+        case Qt::Key_Insert:
+            if (onInsert)
+                onInsert();
+            event->accept();
+            return;
+
+        case Qt::Key_Delete:
+            if (onDelete)
+                onDelete();
+            event->accept();
+            return;
+
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            if (onEnter)
+                onEnter();
+            event->accept();
+            return;
+
+        case Qt::Key_Up:
+            if (onMove)
+                onMove(-1);
+            event->accept();
+            return;
+
+        case Qt::Key_Down:
+            if (onMove)
+                onMove(1);
+            event->accept();
+            return;
+
+        default:
+            QTableWidget::keyPressEvent(event);
+            return;
+        }
     }
 };
 
@@ -227,7 +278,7 @@ class CapabilityView final : public QWidget {
     }
 
   private:
-    QTableWidget* table = nullptr;
+    CapabilityTable* table = nullptr;
 
     /*
      * Logical rule indices currently represented by the table.
@@ -398,7 +449,40 @@ class CapabilityView final : public QWidget {
 
         layout->setSpacing(0);
 
-        table = new QTableWidget(this);
+        table = new CapabilityTable(this);
+
+        table->onInsert = [this]() { addRule(); };
+
+        table->onDelete = [this]() {
+            const QModelIndexList selected = table->selectionModel()->selectedRows();
+
+            if (selected.isEmpty())
+                return;
+
+            const int row = selected.first().row();
+
+            auto* item = table->item(row, 1);
+
+            if (!item)
+                return;
+
+            const int index = item->data(RuleIndexRole).toInt();
+
+            deleteRule(index);
+        };
+
+        table->onEnter = [this]() {
+            const QModelIndexList selected = table->selectionModel()->selectedRows();
+
+            if (selected.isEmpty())
+                return;
+
+            renameRule(selected.first().row());
+        };
+
+        table->onMove = [this](int direction) { moveSelection(direction); };
+
+        table->installEventFilter(this);
 
         table->setColumnCount(4);
 
@@ -586,14 +670,8 @@ class CapabilityView final : public QWidget {
             auto* mouseEvent = static_cast<QMouseEvent*>(event);
 
             if (mouseEvent->button() == Qt::LeftButton) {
-                /*
-                 * Qt 5 compatible.
-                 */
                 const QPoint pos = mouseEvent->localPos().toPoint();
 
-                /*
-                 * Empty area.
-                 */
                 if (!table->itemAt(pos)) {
                     table->clearSelection();
                     return true;
@@ -602,6 +680,49 @@ class CapabilityView final : public QWidget {
         }
 
         return QWidget::eventFilter(watched, event);
+    }
+
+    void moveSelection(int direction) {
+        const int rowCount = table->rowCount();
+
+        if (rowCount == 0)
+            return;
+
+        int currentRow = -1;
+
+        const QModelIndexList selected = table->selectionModel()->selectedRows();
+
+        if (!selected.isEmpty())
+            currentRow = selected.first().row();
+
+        int newRow;
+
+        if (currentRow == -1) {
+            /*
+             * No selection:
+             * Down selects first, Up selects last.
+             */
+            newRow = direction > 0 ? 0 : rowCount - 1;
+        } else {
+            newRow = currentRow + direction;
+
+            /*
+             * Don't wrap around.
+             */
+            if (newRow < 0)
+                newRow = 0;
+
+            if (newRow >= rowCount)
+                newRow = rowCount - 1;
+        }
+
+        table->setCurrentCell(newRow, 1);
+
+        table->selectionModel()->select(table->model()->index(newRow, 0),
+                                        QItemSelectionModel::ClearAndSelect |
+                                            QItemSelectionModel::Rows);
+
+        table->scrollToItem(table->item(newRow, 1), QAbstractItemView::PositionAtCenter);
     }
 
     void renameRule(int row) {
@@ -714,14 +835,62 @@ class CapabilityView final : public QWidget {
             return;
         }
 
+        /*
+         * Find the visual row corresponding to this logical rules[] index.
+         */
+        int rowToRemove = -1;
+
+        for (int row = 0; row < table->rowCount(); ++row) {
+            auto* item = table->item(row, 1);
+
+            if (!item)
+                continue;
+
+            if (item->data(RuleIndexRole).toInt() == index) {
+                rowToRemove = row;
+                break;
+            }
+        }
+
+        /*
+         * Remove the rule and its hook nodes.
+         */
         removeRule(static_cast<size_t>(index));
 
         /*
-         * Force table reconstruction.
+         * Remove the row immediately from the Qt table.
+         */
+        if (rowToRemove != -1)
+            table->removeRow(rowToRemove);
+
+        /*
+         * rules[] indices after the deleted rule have shifted down by one.
+         * Update RuleIndexRole for the remaining rows.
+         */
+        for (int row = 0; row < table->rowCount(); ++row) {
+            for (int column = 0; column < table->columnCount(); ++column) {
+                auto* item = table->item(row, column);
+
+                if (!item)
+                    continue;
+
+                const int oldIndex = item->data(RuleIndexRole).toInt();
+
+                if (oldIndex > index) {
+                    item->setData(RuleIndexRole, oldIndex - 1);
+                }
+            }
+        }
+
+        /*
+         * Keep our cached logical rule list in sync.
          */
         lastRuleIndices.clear();
 
-        refresh();
+        for (size_t i = 0; i < rules.size(); ++i) {
+            if (rules[i])
+                lastRuleIndices.push_back(i);
+        }
     }
 };
 
@@ -743,9 +912,10 @@ void DestroyCapabilityView() {
         return;
 
     CapabilityView* view = capabilityView;
-
     capabilityView = nullptr;
 
+    GuiCloseQWidgetTab(view);
+    view->close();
     delete view;
 }
 

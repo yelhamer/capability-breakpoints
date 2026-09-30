@@ -15,7 +15,6 @@
 #include <regex>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 // Examples: https://github.com/x64dbg/x64dbg/wiki/Plugins
@@ -25,11 +24,38 @@
 // - https://x64dbg.com/blog/2016/10/20/threading-model.html
 // - https://x64dbg.com/blog/2016/07/30/x64dbg-plugin-sdk.html
 
+std::unordered_map<duint, Hook*> Hook::hooksByAddress;
+std::shared_ptr<x64dbgDebugger> Hook::debugger = std::make_shared<x64dbgDebugger>();
 std::unordered_map<std::string, std::shared_ptr<Hook>> hooksByApiName;
 std::vector<std::shared_ptr<Rule>> rules;
 
 void removeRule(size_t index) {
-    return;
+    if (index >= rules.size())
+        return;
+
+    const auto& rule = rules[index];
+
+    const auto nodeMap = rule->getApiCallNodesByApiName();
+
+    for (const auto& [apiName, nodes] : *nodeMap) {
+        auto it = hooksByApiName.find(apiName);
+
+        if (it == hooksByApiName.end()) {
+            continue;
+        }
+
+        auto hook = it->second;
+
+        hook->removeCallNodes(nodes);
+
+        if (hook->isEmpty()) {
+            // Hook now empty, remove {apiName: Hook} entry
+            // This also destroys Hook object
+            hooksByApiName.erase(it);
+        }
+    }
+
+    rules.erase(rules.begin() + index);
 }
 
 // Helper function to safely read the dynamic C++ type name in MSVC
