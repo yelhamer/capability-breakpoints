@@ -41,18 +41,6 @@ class StatusDotDelegate final : public QStyledItemDelegate {
         painter->save();
 
         /*
-         * Draw vertical separators between columns.
-         *
-         * Do not draw one after the last column.
-         */
-        if (index.column() < 3) {
-            painter->setPen(QPen(Qt::white, 1));
-
-            painter->drawLine(option.rect.right(), option.rect.top(), option.rect.right(),
-                              option.rect.bottom());
-        }
-
-        /*
          * Active status dot.
          */
         if (index.column() == 0) {
@@ -342,7 +330,7 @@ class CapabilityView final : public QWidget {
             matches << QString::number(tid);
         }
 
-        const QString matchText = matches.join(", ");
+        const QString matchText = matches.isEmpty() ? "No matches yet." : matches.join(", ");
 
         auto* matchesItem = new QTableWidgetItem(matchText);
 
@@ -414,7 +402,7 @@ class CapabilityView final : public QWidget {
             matches << QString::number(tid);
         }
 
-        const QString matchText = matches.join(", ");
+        const QString matchText = matches.isEmpty() ? "No matches yet" : matches.join(", ");
 
         if (auto* item = table->item(row, 2)) {
             if (item->text() != matchText)
@@ -498,13 +486,15 @@ class CapabilityView final : public QWidget {
         table->setShowGrid(true);
         table->setGridStyle(Qt::SolidLine);
         table->setStyleSheet("QTableWidget {"
-                             "    gridline-color: white;"
+                             "    gridline-color: #717171;"
                              "}"
                              "QTableWidget::item {"
                              "    padding-left: 5px;"
                              "}"
                              "QHeaderView::section {"
                              "    padding-left: 5px;"
+                             "    border-right: 1px solid #717171;"
+                             "    border-bottom: 1px solid #717171;"
                              "}");
 
         table->setWordWrap(false);
