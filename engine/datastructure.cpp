@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -283,9 +284,8 @@ bool ApiCallNode::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger)
         }
     }
 
-    if (result) {
-        matchesByTID[tid] = true;
-    }
+    debugger->saveApiState(tid, shared_from_this());
+    matchesByTID[tid] = true;
 
     return result;
 }
@@ -296,67 +296,3 @@ bool ApiCallNode::getMatchByTID(int tid) const {
 }
 
 } // namespace Nodes
-
-void Rule::setActive(bool state) {
-    std::lock_guard<std::mutex> lock(stateMutex);
-    this->active = state;
-}
-
-bool Rule::getActive() const {
-    std::lock_guard<std::mutex> lock(stateMutex);
-    return this->active;
-}
-
-void Rule::setName(const std::string& newName) {
-    std::lock_guard<std::mutex> lock(stateMutex);
-    name = newName;
-}
-
-std::string Rule::getName() const {
-    std::lock_guard<std::mutex> lock(stateMutex);
-    return this->name;
-}
-std::string Rule::getExpression() const {
-    return this->ruleExpression;
-}
-
-std::shared_ptr<Nodes::RootNode> Rule::getRootNode() {
-    return rootNode;
-}
-
-std::shared_ptr<Nodes::ApiNodeMap> Rule::getApiCallNodesByApiName() const {
-    return apiCallNodesByApiName;
-}
-
-std::vector<int> Rule::getMatchingThreads() const {
-    std::lock_guard<std::mutex> lock(stateMutex);
-
-    std::vector<int> result;
-    result.reserve(matchesByTID.size());
-
-    for (const auto& [tid, matched] : matchesByTID) {
-        if (matched)
-            result.push_back(tid);
-    }
-
-    std::sort(result.begin(), result.end());
-
-    return result;
-}
-
-bool Rule::getMatchByThread(int tid) const {
-    std::lock_guard<std::mutex> lock(stateMutex);
-    const auto it = matchesByTID.find(tid);
-    return it != matchesByTID.end() && it->second;
-}
-
-bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
-    if (!this->rootNode->evaluate(tid, debugger)) {
-        return false;
-    }
-
-    std::lock_guard<std::mutex> lock(stateMutex);
-    this->matchesByTID[tid] = true;
-
-    return true;
-}

@@ -9,6 +9,7 @@
 using namespace antlr4;
 
 std::shared_ptr<Nodes::Node> walk(tree::ParseTree*, Nodes::Node*,
+                                  std::shared_ptr<Nodes::ApiNodeList>,
                                   std::shared_ptr<Nodes::ApiNodeMap>,
                                   std::shared_ptr<Nodes::ThenNode>);
 

@@ -5,11 +5,13 @@
 #include "engine.h"
 #include "pluginmain.h"
 #include "pluginsdk/bridgemain.h"
+#include "state.h"
 #include "x64dbg-debugger.h"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+
 
 // functions
 bool pluginInit(PLUG_INITSTRUCT* initStruct);

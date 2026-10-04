@@ -213,35 +213,42 @@ std::shared_ptr<Nodes::Node> walkApiArg(CapabilityDSLParser::ApiArgContext* node
     return nullptr;
 }
 
-std::vector<std::shared_ptr<Nodes::Node>> walkApiArgs(CapabilityDSLParser::ApiArgsContext* node,
-                                                      Nodes::Node* parent) {
+std::vector<std::shared_ptr<Nodes::Node>>
+walkApiArgs(CapabilityDSLParser::ArgListContainerContext* node, Nodes::Node* parent) {
     std::vector<std::shared_ptr<Nodes::Node>> args;
 
-    if (auto* type = dynamic_cast<CapabilityDSLParser::ArgListContainerContext*>(node)) {
-        for (int i = 0; i < type->apiArg().size(); ++i) {
-            std::shared_ptr<Nodes::Node> node = walkApiArg(type->apiArg()[i], parent, i);
-            if (node) {
-                args.push_back(node);
-            }
+    for (int i = 0; i < node->apiArg().size(); ++i) {
+        std::shared_ptr<Nodes::Node> argNode = walkApiArg(node->apiArg()[i], parent, i);
+        if (argNode) {
+            args.push_back(argNode);
         }
     }
 
     return args;
 }
 
-std::shared_ptr<Nodes::ApiCallNode> walkApiCall(CapabilityDSLParser::ApiCallContext* node,
-                                                Nodes::Node* parent,
-                                                std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
-                                                std::shared_ptr<Nodes::ThenNode> firstThenNode) {
+std::shared_ptr<Nodes::ApiCallNode>
+walkApiCall(CapabilityDSLParser::ApiCallContext* node, Nodes::Node* parent,
+            std::shared_ptr<Nodes::ApiNodeList> orderedApiCallNodes,
+            std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
+            std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     if (auto* type = dynamic_cast<CapabilityDSLParser::ApiWithArgsContext*>(node)) {
         std::string apiName = type->apiName()->getText();
-        std::vector<std::shared_ptr<Nodes::Node>> args = walkApiArgs(type->apiArgs(), parent);
+        if (auto* type_ =
+                dynamic_cast<CapabilityDSLParser::ArgListContainerContext*>(type->apiArgs())) {
+            std::vector<std::shared_ptr<Nodes::Node>> args = walkApiArgs(type_, parent);
 
-        auto apiNode = std::make_shared<Nodes::ApiCallNode>(parent, apiName, args, firstThenNode);
+            auto apiNode = std::make_shared<Nodes::ApiCallNode>(
+                parent, apiName, args, firstThenNode, static_cast<int>(type_->apiArg().size()));
 
-        (*callsByApiName)[apiName].push_back(apiNode);
+            (*callsByApiName)[apiName].push_back(apiNode);
 
-        return apiNode;
+            orderedApiCallNodes->push_back(apiNode);
+
+            return apiNode;
+        } else {
+            throw antlr4::RuntimeException("Unhandled args context ApiCall");
+        }
     } else {
         throw antlr4::RuntimeException("Unhandled context ApiCall");
     }
@@ -249,58 +256,65 @@ std::shared_ptr<Nodes::ApiCallNode> walkApiCall(CapabilityDSLParser::ApiCallCont
 
 std::shared_ptr<Nodes::AndNode> walkAnd(CapabilityDSLParser::AndNodeContext* node,
                                         Nodes::Node* parent,
+                                        std::shared_ptr<Nodes::ApiNodeList> orderedApiCallNodes,
                                         std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
                                         std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     return std::make_shared<Nodes::AndNode>(
-        parent, walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
-        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode));
+        parent,
+        walk(node->ruleExpr()[0], parent, orderedApiCallNodes, callsByApiName, firstThenNode),
+        walk(node->ruleExpr()[1], parent, orderedApiCallNodes, callsByApiName, firstThenNode));
 }
 
 std::shared_ptr<Nodes::OrNode> walkOr(CapabilityDSLParser::OrNodeContext* node, Nodes::Node* parent,
+                                      std::shared_ptr<Nodes::ApiNodeList> orderedApiCallNodes,
                                       std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
                                       std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     return std::make_shared<Nodes::OrNode>(
-        parent, walk(node->ruleExpr()[0], parent, callsByApiName, firstThenNode),
-        walk(node->ruleExpr()[1], parent, callsByApiName, firstThenNode));
+        parent,
+        walk(node->ruleExpr()[0], parent, orderedApiCallNodes, callsByApiName, firstThenNode),
+        walk(node->ruleExpr()[1], parent, orderedApiCallNodes, callsByApiName, firstThenNode));
 }
 
 std::shared_ptr<Nodes::ThenNode> walkThen(CapabilityDSLParser::ThenNodeContext* node,
                                           Nodes::Node* parent,
+                                          std::shared_ptr<Nodes::ApiNodeList> orderedApiCallNodes,
                                           std::shared_ptr<Nodes::ApiNodeMap> callsByApiName,
                                           std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     auto thenNode = std::make_shared<Nodes::ThenNode>(parent);
 
-    thenNode->setFirst(walk(node->ruleExpr()[0], parent, callsByApiName,
+    thenNode->setFirst(walk(node->ruleExpr()[0], parent, orderedApiCallNodes, callsByApiName,
                             firstThenNode ? firstThenNode : thenNode));
 
-    thenNode->setSecond(walk(node->ruleExpr()[1], parent, callsByApiName,
+    thenNode->setSecond(walk(node->ruleExpr()[1], parent, orderedApiCallNodes, callsByApiName,
                              firstThenNode ? firstThenNode : thenNode));
 
     return thenNode;
 }
 
 std::shared_ptr<Nodes::Node> walk(tree::ParseTree* node, Nodes::Node* parent,
+                                  std::shared_ptr<Nodes::ApiNodeList> orderedApiCallNodes,
                                   std::shared_ptr<Nodes::ApiNodeMap> callNodesByName,
                                   std::shared_ptr<Nodes::ThenNode> firstThenNode) {
     if (auto* CallNode = dynamic_cast<CapabilityDSLParser::CallNodeContext*>(node)) {
         // cannot have embeded argNumber
 
-        return walkApiCall(CallNode->apiCall(), parent, callNodesByName, firstThenNode);
+        return walkApiCall(CallNode->apiCall(), parent, orderedApiCallNodes, callNodesByName,
+                           firstThenNode);
     }
 
     if (auto* AndNode = dynamic_cast<CapabilityDSLParser::AndNodeContext*>(node)) {
 
-        return walkAnd(AndNode, parent, callNodesByName, firstThenNode);
+        return walkAnd(AndNode, parent, orderedApiCallNodes, callNodesByName, firstThenNode);
     }
 
     if (auto* OrNode = dynamic_cast<CapabilityDSLParser::OrNodeContext*>(node)) {
 
-        return walkOr(OrNode, parent, callNodesByName, firstThenNode);
+        return walkOr(OrNode, parent, orderedApiCallNodes, callNodesByName, firstThenNode);
     }
 
     if (auto* ThenNode = dynamic_cast<CapabilityDSLParser::ThenNodeContext*>(node)) {
 
-        return walkThen(ThenNode, parent, callNodesByName, firstThenNode);
+        return walkThen(ThenNode, parent, orderedApiCallNodes, callNodesByName, firstThenNode);
     }
 
     throw antlr4::RuntimeException("Unhandled context main");

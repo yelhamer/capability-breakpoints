@@ -4,16 +4,20 @@
 // clang-format: off
 #include <cstddef>
 #include <cstdio>
+#include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 #include <windows.h>
 
 // clang-format: on
 
+#include "datastructure.h"
 #include "debugger.h"
 #include "pluginsdk/bridgemain.h"
+#include "state.h"
 
 #include <cstddef>
 #include <vector>
@@ -43,7 +47,8 @@ class x64dbgDebugger : public DebuggerInterface {
 
     bool installTag(duint address);
     bool removeTag(duint address);
-
+    std::shared_ptr<Arguments<duint>> getArguments(int numberOfArgs);
+    std::shared_ptr<StackTrace<duint>> getStackTrace();
     std::vector<std::byte> getArgValue(const int argNumber) const override;
 
     std::vector<std::byte> getArgMemAllContents(const int argNumber) const override;
@@ -56,6 +61,15 @@ class x64dbgDebugger : public DebuggerInterface {
 
     std::vector<std::byte> getArgMemContentsAtOffset(const int argNumber, const size_t offset,
                                                      const size_t size) const override;
+
+    void saveApiState(int tid, std::shared_ptr<Nodes::ApiCallNode> apiCallNode) override;
+
+    TidToApiNodeToStatePtrListMap getStates() const override {
+        return allStatesByTIDandApiCallNode;
+    }
+
+  private:
+    TidToApiNodeToStatePtrListMap allStatesByTIDandApiCallNode;
 };
 
 #endif // X64DBG

@@ -3,7 +3,6 @@
 
 #include "debugger.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -14,6 +13,8 @@
 #include <vector>
 
 class Rule; // Forward declaration
+
+class Match; // Forward declaration
 
 enum class MemorySearchMode {
     Prefix,
@@ -247,11 +248,12 @@ class MemoryNode : public Node {
     bool evaluateContains_(int tid, std::shared_ptr<DebuggerInterface>);
 };
 
-class ApiCallNode : public Node {
+class ApiCallNode : public Node, public std::enable_shared_from_this<ApiCallNode> {
   public:
     ApiCallNode(Node* parent, std::string apiName, std::vector<std::shared_ptr<Node>> args,
-                std::shared_ptr<ThenNode> firstThenNode)
-        : parentNode(parent), apiName(apiName), args(args), firstThenNode(firstThenNode) {};
+                std::shared_ptr<ThenNode> firstThenNode, int numberOfArgs)
+        : parentNode(parent), apiName(apiName), args(args), firstThenNode(firstThenNode),
+          numberOfArgs(numberOfArgs) {};
 
     Node* parent() override {
         return parentNode;
@@ -268,6 +270,10 @@ class ApiCallNode : public Node {
 
     bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) override;
 
+    int getNumberOfArgs() {
+        return numberOfArgs;
+    }
+
     bool getMatchByTID(int tid) const override;
 
     std::shared_ptr<ThenNode> getFirstThenNode() {
@@ -277,6 +283,7 @@ class ApiCallNode : public Node {
   private:
     Node* parentNode;
     std::string apiName;
+    int numberOfArgs;
     std::vector<std::shared_ptr<Node>> args;
     std::unordered_map<int, bool> matchesByTID;
     std::shared_ptr<ThenNode> firstThenNode;
@@ -285,36 +292,8 @@ class ApiCallNode : public Node {
 using ApiNodePtr = std::shared_ptr<Nodes::ApiCallNode>;
 using ApiNodeList = std::vector<ApiNodePtr>;
 using ApiNodeMap = std::unordered_map<std::string, ApiNodeList>;
+using ApiNodeList = std::vector<std::shared_ptr<Nodes::ApiCallNode>>;
 
 } // namespace Nodes
-
-class Rule {
-  public:
-    Rule(std::string ruleName, std::string ruleExpression,
-         std::shared_ptr<Nodes::RootNode> rootNode,
-         std::shared_ptr<Nodes::ApiNodeMap> apiCallNodesByApiName)
-        : active(true), name(ruleName), ruleExpression(ruleExpression), rootNode(rootNode),
-          apiCallNodesByApiName(apiCallNodesByApiName) {};
-
-    void setActive(bool state);
-    bool getActive() const;
-    void setName(const std::string& newName);
-    std::string getName() const;
-    std::vector<int> getMatchingThreads() const;
-    std::string getExpression() const;
-    std::shared_ptr<Nodes::RootNode> getRootNode();
-    std::shared_ptr<Nodes::ApiNodeMap> getApiCallNodesByApiName() const;
-    bool getMatchByThread(int tid) const;
-    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger);
-
-  private:
-    mutable std::mutex stateMutex;
-    bool active;
-    std::string name;
-    std::string ruleExpression;
-    std::shared_ptr<Nodes::RootNode> rootNode;
-    std::shared_ptr<Nodes::ApiNodeMap> apiCallNodesByApiName;
-    std::unordered_map<int, bool> matchesByTID;
-};
 
 #endif // DATASTRUCTURE_H
