@@ -2,6 +2,7 @@
 
 #include "datastructure.h"
 #include "engine.h"
+#include "gui.h"
 #include "pluginsdk/_plugins.h"
 #include "state.h"
 #include "x64dbg-debugger.h"
@@ -39,17 +40,21 @@ Hook::Hook(std::string apiName) : apiName(apiName) {
 
 bool Hook::attemptMatch() {
     bool matched = false;
-    int tid = this->debugger->getThreadId();
+    int tid = debugger->getThreadId();
 
     for (auto& node : *this->callNodes) {
         std::shared_ptr<Match> match = attemptMatchFromApiNode(tid, this->debugger, node.get());
 
         if (match) {
             matched = true;
-            std::string output{"[+] matched rule: " + match->getRule()->getName() +
-                               " with expression: \n\t\t" + match->getRule()->getExpression() +
-                               "\n"};
+
+            std::string output = "[+] matched rule: " + match->getRule()->getName() +
+                                 " with expression: \n\t\t" + match->getRule()->getExpression() +
+                                 "\n";
+
             this->debugger->log(output);
+
+            ShowRuleMatch(match);
         }
     }
 

@@ -259,6 +259,10 @@ class ApiCallNode : public Node, public std::enable_shared_from_this<ApiCallNode
         return parentNode;
     }
 
+    const std::string& getApiName() const {
+        return apiName;
+    }
+
     void setParent(Node* parent_) override {
         this->parentNode = parent_;
     }

@@ -10,8 +10,6 @@ class Argument {
   public:
     virtual ~Argument() = default;
     virtual const std::vector<std::byte>& getBytes() const = 0;
-
-  private:
 };
 
 class ValueArgument : public Argument {
@@ -48,6 +46,10 @@ template <typename Addr> class Frame {
   public:
     Frame(Addr address, Addr from, Addr to, std::string comment)
         : address(address), from(from), to(to), comment(comment) {}
+
+    std::tuple<Addr, Addr, Addr, std::string> getContent() {
+        return {address, from, to, comment};
+    }
 
     Addr getAddress() const {
         return address;

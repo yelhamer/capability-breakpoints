@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class Rule {
   public:
@@ -26,8 +27,10 @@ class Rule {
     std::shared_ptr<Nodes::RootNode> getRootNode();
     std::shared_ptr<Nodes::ApiNodeList> getOrderedApiCallNodes() const;
     std::shared_ptr<Nodes::ApiNodeMap> getApiCallNodesByApiName() const;
+    std::vector<std::shared_ptr<Match>> getMatches() const;
     bool getMatchByThread(int tid) const;
-    bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger);
+    void addMatch(int tid, std::shared_ptr<Match> match);
+    // bool evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger);
 
   private:
     mutable std::mutex stateMutex;
@@ -37,13 +40,12 @@ class Rule {
     std::shared_ptr<Nodes::RootNode> rootNode;
     std::shared_ptr<Nodes::ApiNodeList> orderedApiCallNodes;
     std::shared_ptr<Nodes::ApiNodeMap> apiCallNodesByApiName;
-    std::unordered_map<int, bool> matchesByTID;
+    std::unordered_map<int, std::vector<std::shared_ptr<Match>>> matchesByTID;
 };
 
 class Match {
   public:
-    Match(int tid, std::shared_ptr<Rule> rule,
-          TidToApiNodeToStatePtrListMap allStatesByTIDandApiCallNode)
+    Match(int tid, Rule* rule, TidToApiNodeToStatePtrListMap allStatesByTIDandApiCallNode)
         : tid(tid), rule(rule) {
         auto nodes = rule->getOrderedApiCallNodes();
         this->statesByApiCallNode.reserve(nodes->size());
@@ -52,7 +54,7 @@ class Match {
         }
     }
 
-    std::shared_ptr<Rule> getRule() const {
+    Rule* getRule() const {
         return rule;
     }
 
@@ -70,7 +72,7 @@ class Match {
 
   private:
     int tid;
-    std::shared_ptr<Rule> rule;
+    Rule* rule;
     ApiNodeToStatePtrListMap statesByApiCallNode;
 };
 

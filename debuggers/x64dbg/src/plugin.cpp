@@ -144,13 +144,29 @@ bool pluginInit(PLUG_INITSTRUCT* initStruct) {
 void pluginStop() {
     dprintf("pluginStop(pluginHandle: %d)\n", pluginHandle);
 
+    /*
+     * Stop receiving debugger callbacks first.
+     */
     _plugin_unregistercallback(pluginHandle, CB_BREAKPOINT);
     _plugin_unregistercommand(pluginHandle, PLUGIN_COMMAND);
 
+    ClearPendingMatches();
+    /*
+     * GUI destruction must happen on the GUI thread.
+     */
     if (qApp) {
-        QMetaObject::invokeMethod(
-            qApp, []() { DestroyCapabilityView(); }, Qt::BlockingQueuedConnection);
+        if (GetCurrentThreadId() == GuiGetMainThreadId()) {
+            DestroyCapabilityView();
+        } else {
+            QMetaObject::invokeMethod(
+                qApp, []() { DestroyCapabilityView(); }, Qt::BlockingQueuedConnection);
+        }
     }
+
+    rules.clear();
+    /*
+     * No Qt objects should be touched after this point.
+     */
 }
 
 // Do GUI/Menu related things here.

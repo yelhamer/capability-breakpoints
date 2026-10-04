@@ -11,7 +11,6 @@
 #include <string>
 #include <unordered_map>
 
-
 class Rule;
 
 // The actual vector is defined in plugin.cpp.

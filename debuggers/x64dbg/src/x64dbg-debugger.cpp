@@ -1,6 +1,7 @@
 #include "x64dbg-debugger.h"
 
 #include "datastructure.h"
+#include "pluginsdk/_dbgfunctions.h"
 #include "pluginsdk/_plugins.h"
 #include "pluginsdk/bridgemain.h"
 
@@ -48,7 +49,9 @@ std::optional<breakpoint> x64dbgDebugger::getBreakpointsAddrName(duint address) 
         for (int i = 0; i < map.count; ++i) {
             const BRIDGEBP& bp = map.bp[i];
             if (bp.addr == address) {
-                return breakpoint{address, bp.name};
+                breakpoint ret{address, bp.name};
+                BridgeFree(map.bp);
+                return ret;
             }
         }
 
@@ -232,37 +235,51 @@ std::shared_ptr<Arguments<duint>> x64dbgDebugger::getArguments(int numberOfArgs)
 
 std::shared_ptr<StackTrace<duint>> x64dbgDebugger::getStackTrace() {
     auto stackTrace = std::make_shared<StackTrace<duint>>();
-    DBGCALLSTACK callstack{};
 
     const auto* funcs = DbgFunctions();
 
-    if (!funcs || !funcs->GetCallStack) {
-        return nullptr;
+    if (!funcs) {
+        _plugin_logprintf("[PluginTemplate] DbgFunctions() == nullptr\n");
+        return stackTrace;
     }
 
-    funcs->GetCallStack(&callstack);
-
-    if (callstack.entries) {
-        stackTrace->reserveFrames(callstack.total);
-
-        for (int i = 0; i < callstack.total; ++i) {
-            const auto& entry = callstack.entries[i];
-
-            auto frame =
-                std::make_shared<Frame<duint>>(entry.addr, entry.from, entry.to, entry.comment);
-
-            stackTrace->addFrame(frame);
-        }
-
-        BridgeFree(callstack.entries);
+    if (!funcs->GetCallStackEx) {
+        _plugin_logprintf("[PluginTemplate] GetCallStackEx == nullptr\n");
+        return stackTrace;
     }
+
+    DBGCALLSTACK callstack{};
+
+    funcs->GetCallStackEx(&callstack, false);
+
+    if (!callstack.entries || callstack.total <= 0) {
+        if (callstack.entries)
+            BridgeFree(callstack.entries);
+
+        return stackTrace;
+    }
+
+    stackTrace->reserveFrames(callstack.total);
+
+    for (int i = 0; i < callstack.total; ++i) {
+        const auto& entry = callstack.entries[i];
+
+        _plugin_logprintf("[PluginTemplate] frame[%d] addr=%p from=%p to=%p comment=%s\n", i,
+                          reinterpret_cast<void*>(entry.addr), reinterpret_cast<void*>(entry.from),
+                          reinterpret_cast<void*>(entry.to), entry.comment);
+
+        stackTrace->addFrame(
+            std::make_shared<Frame<duint>>(entry.addr, entry.from, entry.to, entry.comment));
+    }
+
+    BridgeFree(callstack.entries);
 
     return stackTrace;
 }
 
 void x64dbgDebugger::saveApiState(int tid, std::shared_ptr<Nodes::ApiCallNode> apiCallNode) {
     int numberOfArgs = apiCallNode->getNumberOfArgs();
-    auto args = getArguments(numberOfArgs);
+    auto args = getArguments(numberOfArgs - 1);
     auto stackTrace = getStackTrace();
 
     auto state =

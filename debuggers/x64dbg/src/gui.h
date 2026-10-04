@@ -1,8 +1,11 @@
 #ifndef GUI_H
 #define GUI_H
 
+#include "engine.h"
+
 #include <QTableWidget>
 #include <QWidget>
+#include <memory>
 
 class CapabilityView : public QWidget {
   public:
@@ -21,7 +24,10 @@ class CapabilityView : public QWidget {
 };
 
 void CreateCapabilityView();
+void ProcessPendingMatches();
 void DestroyCapabilityView();
 void RefreshCapabilityView();
+void ClearPendingMatches();
+void ShowRuleMatch(const std::shared_ptr<Match>& match);
 
 #endif // GUI_H

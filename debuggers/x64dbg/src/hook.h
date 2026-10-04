@@ -12,7 +12,6 @@
 #include <string>
 #include <unordered_map>
 
-
 // functions
 bool pluginInit(PLUG_INITSTRUCT* initStruct);
 void pluginStop();

@@ -44,8 +44,9 @@ std::shared_ptr<Match> attemptMatchFromNode(int tid, std::shared_ptr<DebuggerInt
     }
 
     if (Nodes::RootNode* type = dynamic_cast<Nodes::RootNode*>(node)) {
-        return std::make_shared<Match>(tid, std::shared_ptr<Rule>(type->getRule()),
-                                       debugger->getStates());
+        auto match = std::make_shared<Match>(tid, type->getRule(), debugger->getStates());
+        type->getRule()->addMatch(tid, match);
+        return match;
     }
 
     return attemptMatchFromNode(tid, debugger, node->parent());
@@ -116,7 +117,7 @@ std::vector<int> Rule::getMatchingThreads() const {
     result.reserve(matchesByTID.size());
 
     for (const auto& [tid, matched] : matchesByTID) {
-        if (matched)
+        if (!matched.empty())
             result.push_back(tid);
     }
 
@@ -128,10 +129,27 @@ std::vector<int> Rule::getMatchingThreads() const {
 bool Rule::getMatchByThread(int tid) const {
     std::lock_guard<std::mutex> lock(stateMutex);
     const auto it = matchesByTID.find(tid);
-    return it != matchesByTID.end() && it->second;
+    return it != matchesByTID.end() && !it->second.empty();
 }
 
-bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
+void Rule::addMatch(int tid, std::shared_ptr<Match> match) {
+    std::lock_guard<std::mutex> lock(stateMutex);
+    this->matchesByTID[tid].push_back(match);
+}
+
+std::vector<std::shared_ptr<Match>> Rule::getMatches() const {
+    std::lock_guard<std::mutex> lock(stateMutex);
+
+    std::vector<std::shared_ptr<Match>> result;
+
+    for (const auto& [tid, matches] : matchesByTID) {
+        result.insert(result.end(), matches.begin(), matches.end());
+    }
+
+    return result;
+}
+
+/*bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     if (!this->rootNode->evaluate(tid, debugger)) {
         return false;
     }
@@ -140,4 +158,4 @@ bool Rule::evaluate(int tid, std::shared_ptr<DebuggerInterface> debugger) {
     this->matchesByTID[tid] = true;
 
     return true;
-}
+}*/
