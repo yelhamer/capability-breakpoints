@@ -7,6 +7,17 @@ a real debugging session, instead of reconstructed after the fact from sandbox o
 
 ---
 
+## TL;DR
+Write rules that describe malware capabilities in the form of sequential boolean logic, wherein the predicates are WinAPI calls and their specific desired arguments to match on. The tool parses the expression, sets breakpoints at the start of each referenced WinAPI call as well as a callback function. When the callback function is fired (i.e., relevant WinAPI is called), it checks whether the passed arguments match any of the ones specified in any of the predicates in any of the installed rules. If so, if markes that predicate at True and parses upwards to see whether that predicate becoming true makes the rule's entire logical statement true. If so, it reports a match, otherwise, it resumes execution and the analyst would not have to inspect neither that specific WinAPI call, nor its arguments.
+
+Rule expressions support AND, OR, NOT, and THEN. Arguments can be specified as normal values (i.e., decimal, hexadecimal, bytes), or using the memory dereference operator with (i.e., ["MZ":] for argument points to buffer starting with "MZ"; [:"MZ"] for argument points to buffer starting ending "MZ"; [:"MZ":] for argument points to buffer that has "MZ" somewhere in the middle; and ["PE"@0xf8] for argument points to buffer that has "PE" at offset 0xf8 from the start). WinAPI arguments can have boolean expressions, such as, WriteProcessMemory(,,["MZ":] or ["PE"@0xf8]), which matches when the third argument to WriteProcessMemory() contains an address pointing to a buffer that either starts with "MZ" or has "PE" at offset 0xf8.
+
+Future planned improvements include using function detours, which would allow for cleaner breakpoint lists for debuggers that do not support internal/hidden breakpoints (such as x64dbg), and which would also allow for headless execution (i.e., ditch the debugger completely, and match rules directly capa-style, by relying on function detours/trampolines instead of breakpoints to get WinAPI calls).
+
+Other planned improvments include supporting context sharing between API calls (i.e., detecting process injection using section mapping NtCreateSection(set targetSection) then (NtMapViewOfSection(is targetSection) and NtMapViewOfSection(is targetSection, set targetProcess)) then CreateRemoteThread(is targetProcess)).
+
+Another planned improvement is actions: dump memory blobs into a file, modify registry/memory values then continue, process dump (to inspect in debugger at capability-match point), etc.
+
 ## The problem
 
 Traditional breakpoints answer one question: *"has execution reached this
